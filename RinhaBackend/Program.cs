@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddOutputCache();
 
 builder.Services.AddDbContext<PersonContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("RinhaBackend"),
@@ -29,5 +29,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UsePessoasEndpoints();
-
+app.InitializeDatabase();
 app.Run();

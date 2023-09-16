@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
+using RinhaBackend.Policies;
 using System.Text;
 
 namespace RinhaBackend.Endpoints;
@@ -11,9 +13,18 @@ internal static class PersonsEndpointDefinitions
     public static void UsePessoasEndpoints(this WebApplication application)
     {
         var endpointGroup = application.MapGroup("pessoas");
-        endpointGroup.MapGet("{id}", GetPersonById).WithName("GetPersonById");
-        endpointGroup.MapGet("", GetPersons);
-        endpointGroup.MapPost("", CreatePersons);
+
+        endpointGroup.MapGet("{id}", GetPersonById)
+            .CacheOutput(x => x.AddPolicy<ByIdCachePolicy>())
+            .WithName("GetPersonById");
+
+        endpointGroup.MapGet(string.Empty, GetPersons)
+            .CacheOutput(x => x.Tag("pessoas")
+            .SetVaryByQuery("t"))
+            .WithName("GetPersons");
+
+        endpointGroup.MapPost(string.Empty, CreatePersons);
+
         application.MapGet("contagem-pessoas", CountPersons);
     }
 
@@ -22,7 +33,7 @@ internal static class PersonsEndpointDefinitions
         return TypedResults.Ok(await dbcontext.Persons.CountAsync(cancellationToken));
     }
 
-    private static async ValueTask<Results<CreatedAtRoute, BadRequest>> CreatePersons(Person person, IPersonDbContext dbcontext, CancellationToken cancellationToken)
+    private static async ValueTask<Results<CreatedAtRoute, BadRequest>> CreatePersons(Person person, IPersonDbContext dbcontext, IOutputCacheStore cacheStore, CancellationToken cancellationToken)
     {
 
         if (string.IsNullOrWhiteSpace(person.Apelido) ||
@@ -36,6 +47,8 @@ internal static class PersonsEndpointDefinitions
 
         await dbcontext.Persons.AddAsync(person, cancellationToken);
         await dbcontext.SaveChangesAsync(cancellationToken);
+        await cacheStore.EvictByTagAsync("pessoas", cancellationToken);
+        await cacheStore.EvictByTagAsync(person.Id.ToString(), cancellationToken);
         return TypedResults.CreatedAtRoute(nameof(GetPersonById), new { id = person.Id });
     }
 
