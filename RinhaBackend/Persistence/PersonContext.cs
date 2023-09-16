@@ -1,27 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RinhaBackend.Models;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace RinhaBackend.Persistence;
 
-public class PersonContext : DbContext
+public class PersonContext : DbContext, IPersonDbContext
 {
-    public DbSet<Person> Persons { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    public PersonContext(DbContextOptions<PersonContext> options) : base(options)
     {
-        optionsBuilder.UseNpgsql("Host=db;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend");
     }
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Person>()
-            .HasIndex(p => p.Id); 
 
-        modelBuilder.Entity<Person>()
-            .Property(p => p.SearchField)
-            .HasComputedColumnSql("[Apelido] + ' ' + [Nome] + ' ' + STRING_AGG([Stacks], ' ')");
-        
-        modelBuilder.Entity<Person>()
-            .HasIndex(p => p.SearchField);
+    public DbSet<Person> Persons => Set<Person>();
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        base.OnModelCreating(builder);
     }
 
 }

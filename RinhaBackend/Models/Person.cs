@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace RinhaBackend.Models;
-
 
 public class Person
 {
@@ -14,7 +14,8 @@ public class Person
     [MaxLength(100)]
     public string Nome { get; set; }
     [Required]
-    public DateTime Nascimento { get; set; }
+    public DateOnly Nascimento { get; set; }
     public List<string> Stack { get; set; } = new List<string>();
+    [JsonIgnore]
     public string SearchField { get; set; }
 }
