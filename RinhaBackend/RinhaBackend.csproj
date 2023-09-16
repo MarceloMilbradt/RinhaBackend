@@ -8,6 +8,7 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>62b2c595-eda7-4954-8d06-03417980ae57</UserSecretsId>
         <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+		<PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,6 +20,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.11" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.4" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
+        <PackageReference Include="StackExchange.Redis" Version="2.6.122" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 

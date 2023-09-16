@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   rinhabackend:
-    image: ${DOCKER_REGISTRY-}rinhabackend:0.0.2
+    image: ${DOCKER_REGISTRY-}rinhabackend:0.1.0
     container_name: rinhabackend
     depends_on:
       - db
@@ -19,7 +19,7 @@ services:
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
 
   rinhabackend2:
-    image: ${DOCKER_REGISTRY-}rinhabackend:0.0.2
+    image: ${DOCKER_REGISTRY-}rinhabackend:0.1.0
     container_name: rinhabackend2
     depends_on:
       - db
@@ -47,7 +47,7 @@ services:
     networks:
       - api_network
     ports:
-      - 80:80
+      - 9999:9999
 
   db:
     image: postgres:latest
@@ -60,6 +60,13 @@ services:
       - POSTGRES_USER=rinhabackend
       - POSTGRES_PASSWORD=rinhabackend
       - POSTGRES_DB=rinhabackend
+
+  cache:
+    image: redis:latest
+    networks:
+      - api_network
+    ports:
+      - '6379:6379' 
 
 networks:
   api_network:
