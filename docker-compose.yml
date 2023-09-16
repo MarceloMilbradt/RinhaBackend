@@ -1,12 +1,9 @@
-﻿version: '3.8'
+version: '3.8'
 
 services:
-  api1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: api
-    container_name: api2
+  rinhabackend:
+    image: ${DOCKER_REGISTRY-}rinhabackend:dev
+    container_name: rinhabackend
     depends_on:
       - db
     networks:
@@ -16,11 +13,12 @@ services:
     expose:
       - "80"
 
-  api2:
-    image: api
-    container_name: api1
+  rinhabackend2:
+    image: ${DOCKER_REGISTRY-}rinhabackend:dev
+    container_name: rinhabackend2
     depends_on:
       - db
+      - rinhabackend
     networks:
       - api_network
     environment:
@@ -34,8 +32,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Map the nginx.conf file
     depends_on:
-      - api1
-      - api2
+      - rinhabackend
+      - rinhabackend2
     networks:
       - api_network
     ports:
