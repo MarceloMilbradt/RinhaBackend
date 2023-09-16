@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using RinhaBackend.Endpoints;
 using RinhaBackend.Persistence;
 
@@ -25,8 +24,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
 
 app.UsePessoasEndpoints();
 app.InitializeDatabase();

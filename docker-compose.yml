@@ -2,19 +2,24 @@ version: '3.8'
 
 services:
   rinhabackend:
-    image: ${DOCKER_REGISTRY-}rinhabackend:dev
+    image: ${DOCKER_REGISTRY-}rinhabackend:0.0.2
     container_name: rinhabackend
     depends_on:
       - db
     networks:
       - api_network
     environment:
-      - DATABASE_URL=postgres://db:5432/
-    expose:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+    ports:
       - "80"
+      - "443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
 
   rinhabackend2:
-    image: ${DOCKER_REGISTRY-}rinhabackend:dev
+    image: ${DOCKER_REGISTRY-}rinhabackend:0.0.2
     container_name: rinhabackend2
     depends_on:
       - db
@@ -22,9 +27,14 @@ services:
     networks:
       - api_network
     environment:
-      - DATABASE_URL=postgres://db:5432/
-    expose:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+    ports:
       - "80"
+      - "443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
 
   nginx:
     image: nginx:latest
@@ -37,11 +47,13 @@ services:
     networks:
       - api_network
     ports:
-      - "9999:9999"
+      - 80:80
 
   db:
     image: postgres:latest
     container_name: postgres_db
+    ports:
+      - "5432:5432"
     networks:
       - api_network
     environment:
