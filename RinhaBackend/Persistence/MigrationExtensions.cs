@@ -9,6 +9,7 @@ public static class MigrationExtensions
         using var scope = application.ApplicationServices.GetService<IServiceScopeFactory>()!.CreateScope();
         var dbcontext = scope.ServiceProvider.GetRequiredService<PersonContext>();
         dbcontext.Database.Migrate();
+        //Carrega as pessoas em memoria
         dbcontext.Persons.Load();
     }
 }
