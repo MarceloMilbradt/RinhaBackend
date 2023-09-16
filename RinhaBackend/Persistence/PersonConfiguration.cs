@@ -10,7 +10,11 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
     {
         builder.HasIndex(p => p.Id);
         builder.Property(p => p.SearchField)
-               .HasComputedColumnSql(@"""Apelido"" || ' ' || ""Nome"" || ' ' || array_to_string_immutable(""Stack"", ' ')", stored: true);
+               .HasComputedColumnSql("""
+                                          immutable_unaccent(lower("Apelido")) || ' ' || 
+                                          immutable_unaccent(lower("Nome")) || ' ' || 
+                                          immutable_unaccent(lower(array_to_string_immutable("Stack", ' ')))
+                                         """, stored: true);
         builder.Property(p => p.Nascimento).HasColumnType("date");
 
         builder.HasIndex(p => p.SearchField);

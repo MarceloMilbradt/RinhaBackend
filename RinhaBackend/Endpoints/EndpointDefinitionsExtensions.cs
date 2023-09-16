@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
+using System.Text;
 
 namespace RinhaBackend.Endpoints;
 
@@ -45,8 +46,10 @@ internal static class PersonsEndpointDefinitions
             return TypedResults.BadRequest();
         }
 
+        var normalizedText = t.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+
         var persons = await dbcontext
-            .Persons.Where(c => c.SearchField.Contains(t))
+            .Persons.Where(c => c.SearchField.Contains(normalizedText))
             .ToListAsync(cancellationToken);
 
         return TypedResults.Ok(persons);
