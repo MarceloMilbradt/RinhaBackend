@@ -7,18 +7,6 @@ namespace RinhaBackend.Models;
 
 public class Person
 {
-    public Person()
-    {
-    }
-    public Person(PersonDto personDto)
-    {
-        Id = personDto.Id;
-        Apelido = personDto.Apelido;
-        Nome = personDto.Nome;
-        Nascimento = personDto.Nascimento;
-        Stack = new List<string>(personDto.Stack ?? Array.Empty<string>());
-        BuildSearchField();
-    }
 
     public void BuildSearchField()
     {

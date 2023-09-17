@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using RinhaBackend.Cache;
 using RinhaBackend.Endpoints;
 using RinhaBackend.Filters;
 using RinhaBackend.Persistence;
 using StackExchange.Redis;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,17 +12,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<RequestErrorCaptureMiddleware>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    s => ConnectionMultiplexer.Connect("cache"));
+builder.Services.AddScoped<IRedisCacheSevice, RedisCacheService>();
 
-if (builder.Environment.IsProduction())
-{
-    builder.Services.AddRedisOutputCache();
-    builder.Services.AddSingleton<IConnectionMultiplexer>(
-        s => ConnectionMultiplexer.Connect("cache"));
-}
-else
-{
-    builder.Services.AddOutputCache();
-}
+builder.Services.AddMediatR(options => options.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())); 
 
 builder.Services.AddDbContext<PersonContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("RinhaBackend"),
@@ -31,8 +27,6 @@ builder.Services.AddDbContext<PersonContext>(options =>
             }));
 
 
-
-
 var app = builder.Build();
 
 
@@ -41,7 +35,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseOutputCache();
 
 app.UseMiddleware<RequestErrorCaptureMiddleware>();
 

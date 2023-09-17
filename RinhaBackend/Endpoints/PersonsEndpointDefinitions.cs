@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.OutputCaching;
+﻿using MediatR;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RinhaBackend.Filters;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
-using RinhaBackend.Policies;
-using System;
-using System.Text;
-using System.Threading;
+using RinhaBackend.Persons.Commands;
+using RinhaBackend.Persons.Queries;
 
 namespace RinhaBackend.Endpoints;
 
@@ -17,19 +16,14 @@ internal static class PersonsEndpointDefinitions
     {
         var endpointGroup = application.MapGroup("pessoas");
 
-        endpointGroup.MapGet("{id}", GetPersonById)
-            .CacheOutput(x => x.AddPolicy<ByIdCachePolicy>())
-            .WithName("GetPersonById");
+        endpointGroup.MapGet("{id}", GetPersonById).WithName("GetPersonById");
 
-        endpointGroup.MapGet(string.Empty, GetPersons)
-            .CacheOutput(x => x.Tag("pessoas")
-            .SetVaryByQuery("t"))
-            .WithName("GetPersons");
+        endpointGroup.MapGet(string.Empty, GetPersons).WithName("GetPersons");
 
         endpointGroup.MapPost(string.Empty, CreatePersons).AddEndpointFilter<PersonModelValidFilter>();
 
         application.MapGet("contagem-pessoas", CountPersons);
-       
+
     }
 
     private static async Task<Ok<int>> CountPersons(PersonContext dbcontext, CancellationToken cancellationToken)
@@ -37,70 +31,36 @@ internal static class PersonsEndpointDefinitions
         return TypedResults.Ok(await PersonContext.CountPersonsCompiledQueryAsync(dbcontext));
     }
 
-    private static async ValueTask<Results<CreatedAtRoute, BadRequest, UnprocessableEntity>> CreatePersons(PersonDto person, PersonContext dbcontext, IOutputCacheStore cacheStore, CancellationToken cancellationToken)
+    private static async ValueTask<Results<CreatedAtRoute, BadRequest, UnprocessableEntity>> CreatePersons(
+        [FromBody] CreatePersonCommand createPersonCommand, [FromServices]ISender sender, CancellationToken cancellationToken)
     {
-        Person dbPerson = null;
-        if (person.Id != Guid.Empty)
-        {
-            dbPerson = await dbcontext.Persons.FindAsync(person.Id);
-            if (dbPerson == null)
-            {
-                return TypedResults.BadRequest();
-            }
-
-            dbPerson.Apelido = person.Apelido;
-            dbPerson.Nome = person.Nome;
-            dbPerson.Stack = (person.Stack ?? Array.Empty<string>()).ToList();
-            dbPerson.Nascimento = person.Nascimento;
-            dbPerson.BuildSearchField();
-        }
-        else
-        {
-            dbPerson = new Person(person);
-            dbcontext.Persons.Add(dbPerson);
-        }
 
         try
         {
-            await dbcontext.SaveChangesAsync(cancellationToken);
-            return TypedResults.CreatedAtRoute(nameof(GetPersonById), new { id = dbPerson.Id });
+            var id = await sender.Send(createPersonCommand, cancellationToken);
+            return TypedResults.CreatedAtRoute(nameof(GetPersonById), new { id });
         }
         catch (DbUpdateException)
         {
             return TypedResults.UnprocessableEntity();
         }
-        finally
-        {
-            if (dbPerson != null && dbPerson.Id != Guid.Empty)
-            {
-                await cacheStore.EvictByTagAsync("pessoas", cancellationToken);
-                await cacheStore.EvictByTagAsync(dbPerson.Id.ToString(), cancellationToken);
-            }
-        }
     }
 
 
-    private static async ValueTask<Results<Ok<List<Person>>, BadRequest>> GetPersons(string? t, PersonContext dbcontext, CancellationToken cancellationToken)
+    private static async ValueTask<Results<Ok<IEnumerable<Person>>, BadRequest>> GetPersons(string? t, [FromServices] ISender sender, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(t))
         {
             return TypedResults.BadRequest();
         }
 
-        var normalizedText = t.ToLowerInvariant().Normalize(NormalizationForm.FormD);
-
-        var persons = new List<Person>(500);
-        await foreach (var item in PersonContext.SearchPersonsCompiledQueryAsync(dbcontext, normalizedText))
-        {
-            persons.Add(item);
-        }
-
+        var persons = await sender.Send(GetPersonsByTermQuery.FromTerm(t), cancellationToken);
         return TypedResults.Ok(persons);
     }
 
-    private static async Task<Results<Ok<Person>, NotFound>> GetPersonById(Guid id, PersonContext dbcontext, CancellationToken cancellationToken)
+    private static async Task<Results<Ok<Person>, NotFound>> GetPersonById([FromRoute] Guid id, [FromServices] ISender sender, CancellationToken cancellationToken)
     {
-        var person = await PersonContext.FindPersonByIdCompiledQueryAsync(dbcontext, id);
+        var person = await sender.Send(GetPersonByIdQuery.FromId(id), cancellationToken);
         if (person is null)
         {
             return TypedResults.NotFound();
