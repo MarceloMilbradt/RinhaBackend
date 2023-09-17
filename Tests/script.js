@@ -13,7 +13,7 @@ export let options = {
   stages: [
     { duration: '10s', target: 2 }, // warm up
     { duration: '15s', target: 5 }, // are you ready?
-    { duration: '3m', target: 600 }, // lezzz go!!!
+    { duration: '30s', target: 600 }, // lezzz go!!!
 
     // Add other stages for the other scenarios as needed
   ],

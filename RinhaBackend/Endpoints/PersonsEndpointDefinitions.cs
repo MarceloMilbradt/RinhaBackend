@@ -39,16 +39,10 @@ internal static class PersonsEndpointDefinitions
 
     private static async ValueTask<Results<CreatedAtRoute, BadRequest, UnprocessableEntity>> CreatePersons(PersonDto person, PersonContext dbcontext, IOutputCacheStore cacheStore, CancellationToken cancellationToken)
     {
-        Person? dbPerson;
-        if (person.Id == Guid.Empty)
-        {
-            dbPerson = new Person(person);
-            dbcontext.Persons.Add(dbPerson);
-        }
-        else
+        Person dbPerson = null;
+        if (person.Id != Guid.Empty)
         {
             dbPerson = await dbcontext.Persons.FindAsync(person.Id);
-
             if (dbPerson == null)
             {
                 return TypedResults.BadRequest();
@@ -59,6 +53,11 @@ internal static class PersonsEndpointDefinitions
             dbPerson.Stack = (person.Stack ?? Array.Empty<string>()).ToList();
             dbPerson.Nascimento = person.Nascimento;
             dbPerson.BuildSearchField();
+        }
+        else
+        {
+            dbPerson = new Person(person);
+            dbcontext.Persons.Add(dbPerson);
         }
 
         try
@@ -80,6 +79,7 @@ internal static class PersonsEndpointDefinitions
         }
     }
 
+
     private static async ValueTask<Results<Ok<List<Person>>, BadRequest>> GetPersons(string? t, PersonContext dbcontext, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(t))
@@ -100,7 +100,7 @@ internal static class PersonsEndpointDefinitions
 
     private static async Task<Results<Ok<Person>, NotFound>> GetPersonById(Guid id, PersonContext dbcontext, CancellationToken cancellationToken)
     {
-        var person = await dbcontext.Persons.FindAsync(id);
+        var person = await PersonContext.FindPersonByIdCompiledQueryAsync(dbcontext, id);
         if (person is null)
         {
             return TypedResults.NotFound();

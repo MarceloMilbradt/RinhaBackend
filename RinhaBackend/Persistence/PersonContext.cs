@@ -28,7 +28,8 @@ public class PersonContext : DbContext
     EF.CompileAsyncQuery((PersonContext context) => context.Persons.Count());
 
     public static readonly Func<PersonContext, string, Task<bool>> AnyPersonsWithNicknameCompiledQueryAsync =
-    EF.CompileAsyncQuery((PersonContext context, string apelido) => context.Persons.Any(p => p.Apelido == apelido));
+    EF.CompileAsyncQuery((PersonContext context, string apelido) => context.Persons.AsNoTracking().Any(p => p.Apelido == apelido));
 
-
+    public static readonly Func<PersonContext, Guid, Task<Person?>> FindPersonByIdCompiledQueryAsync =
+        EF.CompileAsyncQuery((PersonContext context, Guid id) => context.Persons.AsNoTracking().FirstOrDefault(p => p.Id == id));
 }
