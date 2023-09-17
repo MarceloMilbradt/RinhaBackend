@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   rinhabackend:
-    image: ${DOCKER_REGISTRY-}rinhabackend:0.1.0
+    image: ${DOCKER_REGISTRY-}rinhabackend:latest
     container_name: rinhabackend
     depends_on:
       - db
@@ -19,7 +19,7 @@ services:
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
 
   rinhabackend2:
-    image: ${DOCKER_REGISTRY-}rinhabackend:0.1.0
+    image: ${DOCKER_REGISTRY-}rinhabackend:latest
     container_name: rinhabackend2
     depends_on:
       - db

@@ -12,6 +12,7 @@ public static class MigrationExtensions
         {
             dbcontext.Database.Migrate();
             //Carrega as pessoas em memoria
+            dbcontext.Persons.ExecuteDelete();
             dbcontext.Persons.Load();
 
         }

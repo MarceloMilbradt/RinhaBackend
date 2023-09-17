@@ -5,6 +5,7 @@ using RinhaBackend.Models;
 using RinhaBackend.Persistence;
 using RinhaBackend.Policies;
 using System.Text;
+using System.Threading;
 
 namespace RinhaBackend.Endpoints;
 
@@ -28,31 +29,57 @@ internal static class PersonsEndpointDefinitions
         application.MapGet("contagem-pessoas", CountPersons);
     }
 
-    private static async Task<Ok<int>> CountPersons(IPersonDbContext dbcontext, CancellationToken cancellationToken)
+    private static async Task<Ok<int>> CountPersons(PersonContext dbcontext, CancellationToken cancellationToken)
     {
-        return TypedResults.Ok(await dbcontext.Persons.CountAsync(cancellationToken));
+        return TypedResults.Ok(await PersonContext.CountPersonsCompiledQueryAsync(dbcontext));
     }
 
-    private static async ValueTask<Results<CreatedAtRoute, BadRequest>> CreatePersons(Person person, IPersonDbContext dbcontext, IOutputCacheStore cacheStore, CancellationToken cancellationToken)
+    private static async ValueTask<Results<CreatedAtRoute, BadRequest>> CreatePersons(PersonDto person, PersonContext dbcontext, IOutputCacheStore cacheStore, CancellationToken cancellationToken)
     {
-
         if (string.IsNullOrWhiteSpace(person.Apelido) ||
-                  string.IsNullOrWhiteSpace(person.Nome) ||
-                  await dbcontext.Persons.AnyAsync(p => p.Apelido == person.Apelido) ||
-                  (person.Stack != null && person.Stack.Any(s => string.IsNullOrWhiteSpace(s))))
+            string.IsNullOrWhiteSpace(person.Nome) ||
+            (person.Stack != null && person.Stack.Any(s => string.IsNullOrWhiteSpace(s))))
         {
             return TypedResults.BadRequest();
         }
 
+        Person dbPerson;
+        if (person.Id == Guid.Empty)
+        {
+            dbPerson = new Person(person);
+            dbcontext.Persons.Add(dbPerson);
+        }
+        else
+        {
+            dbPerson = await PersonContext.FindPersonByIdCompiledQueryAsync(dbcontext, person.Id);
 
-        await dbcontext.Persons.AddAsync(person, cancellationToken);
-        await dbcontext.SaveChangesAsync(cancellationToken);
+            if (dbPerson == null)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            dbPerson.Apelido = person.Apelido;
+            dbPerson.Nome = person.Nome;
+            dbPerson.Stack = person.Stack.ToList();
+            dbPerson.Nascimento = person.Nascimento;
+        }
+
+        try
+        {
+            await dbcontext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return TypedResults.BadRequest();
+        }
+
         await cacheStore.EvictByTagAsync("pessoas", cancellationToken);
         await cacheStore.EvictByTagAsync(person.Id.ToString(), cancellationToken);
-        return TypedResults.CreatedAtRoute(nameof(GetPersonById), new { id = person.Id });
+
+        return TypedResults.CreatedAtRoute(nameof(GetPersonById), new { id = dbPerson.Id });
     }
 
-    private static async ValueTask<Results<Ok<List<Person>>, BadRequest>> GetPersons(string t, IPersonDbContext dbcontext, CancellationToken cancellationToken)
+    private static async ValueTask<Results<Ok<List<Person>>, BadRequest>> GetPersons(string? t, PersonContext dbcontext, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(t))
         {
@@ -61,16 +88,14 @@ internal static class PersonsEndpointDefinitions
 
         var normalizedText = t.ToLowerInvariant().Normalize(NormalizationForm.FormD);
 
-        var persons = await dbcontext
-            .Persons.Where(c => c.SearchField.Contains(normalizedText))
-            .ToListAsync(cancellationToken);
+        var persons = await PersonContext.SearchPersonsCompiledQueryAsync(dbcontext, normalizedText);
 
         return TypedResults.Ok(persons);
     }
 
-    private static async Task<Results<Ok<Person>, NotFound>> GetPersonById(Guid id, IPersonDbContext dbcontext, CancellationToken cancellationToken)
+    private static async Task<Results<Ok<Person>, NotFound>> GetPersonById(Guid id, PersonContext dbcontext, CancellationToken cancellationToken)
     {
-        var person = await dbcontext.Persons.FindAsync(id, cancellationToken);
+        var person = await PersonContext.FindPersonByIdCompiledQueryAsync(dbcontext, id);
         if (person is null)
         {
             return TypedResults.NotFound();

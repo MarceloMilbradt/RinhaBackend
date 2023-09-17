@@ -30,7 +30,6 @@ namespace RinhaBackend.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Apelido")
-                        .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
@@ -43,16 +42,18 @@ namespace RinhaBackend.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("SearchField")
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("text")
-                        .HasComputedColumnSql(" unaccent(lower(\"Apelido\")) || ' ' || \r\n unaccent(lower(\"Nome\")) || ' ' || \r\n unaccent(lower(array_to_string_immutable(\"Stack\", ' ')))", true);
+                        .HasComputedColumnSql("generate_search_field(\"Apelido\", \"Nome\", \"Nascimento\", \"Stack\")", true);
 
                     b.Property<List<string>>("Stack")
                         .IsRequired()
                         .HasColumnType("text[]");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Apelido")
+                        .IsUnique();
 
                     b.HasIndex("Id");
 
