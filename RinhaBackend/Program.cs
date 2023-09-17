@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using RinhaBackend.Aot;
 using RinhaBackend.Endpoints;
+using RinhaBackend.Filters;
 using RinhaBackend.Persistence;
 using StackExchange.Redis;
 
@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddTransient<RequestErrorCaptureMiddleware>();
 
 if (builder.Environment.IsProduction())
 {
@@ -20,7 +22,6 @@ else
     builder.Services.AddOutputCache();
 }
 
-
 builder.Services.AddDbContext<PersonContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("RinhaBackend"),
             builder =>
@@ -29,24 +30,22 @@ builder.Services.AddDbContext<PersonContext>(options =>
                 builder.EnableRetryOnFailure();
             }));
 
-//builder.Services.ConfigureHttpJsonOptions(option =>
-//{
-//    option.SerializerOptions.TypeInfoResolver = new ApiJsonSerializerContext();
-//});
+
+
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseOutputCache();
 
+app.UseMiddleware<RequestErrorCaptureMiddleware>();
 
 app.UsePessoasEndpoints();
-
 
 app.InitializeDatabase();
 app.Run();

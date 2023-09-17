@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 
 namespace RinhaBackend.Persistence;
 
-public class PersonContext : DbContext, IPersonDbContext
+public class PersonContext : DbContext
 {
     public PersonContext(DbContextOptions<PersonContext> options) : base(options)
     {
@@ -20,15 +20,15 @@ public class PersonContext : DbContext, IPersonDbContext
     }
 
 
-    public static readonly Func<PersonContext, string, Task<List<Person>>> SearchPersonsCompiledQueryAsync =
-    EF.CompileAsyncQuery((PersonContext context, string term) => context.Persons.Where(c => c.SearchField.Contains(term)).ToList());
-
-
-    public static readonly Func<PersonContext, Guid, Task<Person?>> FindPersonByIdCompiledQueryAsync =
-        EF.CompileAsyncQuery((PersonContext context, Guid id) => context.Persons.Find(id));
+    public static readonly Func<PersonContext, string, IAsyncEnumerable<Person>> SearchPersonsCompiledQueryAsync =
+    EF.CompileAsyncQuery((PersonContext context, string term) =>
+        context.Persons.Where(c => c.SearchField!.Contains(term)));
 
     public static readonly Func<PersonContext, Task<int>> CountPersonsCompiledQueryAsync =
     EF.CompileAsyncQuery((PersonContext context) => context.Persons.Count());
+
+    public static readonly Func<PersonContext, string, Task<bool>> AnyPersonsWithNicknameCompiledQueryAsync =
+    EF.CompileAsyncQuery((PersonContext context, string apelido) => context.Persons.Any(p => p.Apelido == apelido));
 
 
 }

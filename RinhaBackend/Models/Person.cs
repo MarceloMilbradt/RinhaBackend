@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace RinhaBackend.Models;
@@ -16,6 +17,12 @@ public class Person
         Nome = personDto.Nome;
         Nascimento = personDto.Nascimento;
         Stack = new List<string>(personDto.Stack ?? Array.Empty<string>());
+        BuildSearchField();
+    }
+
+    public void BuildSearchField()
+    {
+        SearchField = $"{Apelido} {Nome} {Nascimento.ToShortDateString()} {string.Join(' ', Stack)}";
     }
 
     [Key]
@@ -30,7 +37,6 @@ public class Person
     public List<string> Stack { get; set; } = new List<string>();
 
     [JsonIgnore]
-    public string SearchField { get; set; }
+    [MaxLength(500)]
+    public string? SearchField { get; set; } = string.Empty;
 }
-
-public record PersonDto(Guid Id, string? Apelido, string? Nome, DateOnly Nascimento, string[]? Stack);

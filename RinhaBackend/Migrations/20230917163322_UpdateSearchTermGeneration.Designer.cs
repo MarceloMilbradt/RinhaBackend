@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RinhaBackend.Persistence;
@@ -12,9 +13,11 @@ using RinhaBackend.Persistence;
 namespace RinhaBackend.Migrations
 {
     [DbContext(typeof(PersonContext))]
-    partial class PersonContextModelSnapshot : ModelSnapshot
+    [Migration("20230917163322_UpdateSearchTermGeneration")]
+    partial class UpdateSearchTermGeneration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,8 +45,7 @@ namespace RinhaBackend.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("SearchField")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("text");
 
                     b.Property<List<string>>("Stack")
                         .IsRequired()
@@ -51,7 +53,8 @@ namespace RinhaBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Apelido");
+                    b.HasIndex("Apelido")
+                        .IsUnique();
 
                     b.HasIndex("Id");
 
