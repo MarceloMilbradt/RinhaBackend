@@ -17,6 +17,11 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: '0.6GB'
 
   rinhabackend2:
     image: ${DOCKER_REGISTRY-}rinhabackend:latest
@@ -35,6 +40,11 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: '0.6GB'
 
   nginx:
     image: nginx:latest
@@ -48,7 +58,11 @@ services:
       - api_network
     ports:
       - 9999:9999
-
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: '0.2GB'
   db:
     image: postgres:latest
     container_name: postgres_db
@@ -61,6 +75,11 @@ services:
       - POSTGRES_PASSWORD=rinhabackend
       - POSTGRES_DB=rinhabackend
     command: ["postgres", "-c", "max_connections=300"]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: '1.4GB'
 
   cache:
     image: redis:latest
@@ -68,6 +87,12 @@ services:
       - api_network
     ports:
       - '6379:6379' 
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: '0.8GB'
+
 
 networks:
   api_network:
