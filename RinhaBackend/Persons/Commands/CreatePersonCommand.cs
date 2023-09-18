@@ -28,9 +28,7 @@ internal sealed class CreatePersonCommandHandler : IRequestHandler<CreatePersonC
             Stack = new List<string>(request.Stack ?? Array.Empty<string>()),
         };
         newPerson.BuildSearchField();
-
-        await _personContext.AddAsync(newPerson);
-        await _publisher.Publish(PersonCreatedEvent.From(newPerson));
+        await _publisher.Publish(PersonCreatedEvent.From(newPerson), cancellationToken);
         return newPerson.Id;
     }
 }

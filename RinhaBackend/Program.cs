@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RinhaBackend.BackgroundServices;
 using RinhaBackend.Cache;
 using RinhaBackend.Endpoints;
 using RinhaBackend.Filters;
@@ -15,7 +16,7 @@ builder.Services.AddTransient<RequestErrorCaptureMiddleware>();
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     s => ConnectionMultiplexer.Connect("cache"));
 builder.Services.AddScoped<IRedisCacheSevice, RedisCacheService>();
-
+builder.Services.AddHostedService<PersonDatabaseWorker>();
 builder.Services.AddMediatR(options => options.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())); 
 
 builder.Services.AddDbContext<PersonContext>(options =>
