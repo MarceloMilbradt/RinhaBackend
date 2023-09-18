@@ -3,7 +3,7 @@ using RinhaBackend.Cache;
 
 namespace RinhaBackend.Filters;
 
-public class PersonModelValidFilter : IEndpointFilter
+internal sealed class PersonModelValidFilter : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext efiContext,
         EndpointFilterDelegate next)

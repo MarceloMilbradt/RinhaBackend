@@ -15,6 +15,6 @@ internal sealed record CreateCacheItemOnPersonCreatedEventHandler : INotificatio
     {
         var person = notification.Person;
         await _cacheService.SetAsync(person.Id, person);
-        await _cacheService.SetKeyAsync(person.Apelido);
+        await _cacheService.SetKeyAsync(person.Apelido!);
     }
 }

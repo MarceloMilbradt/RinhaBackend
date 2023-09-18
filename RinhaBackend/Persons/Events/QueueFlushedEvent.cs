@@ -1,34 +1,32 @@
-﻿using MediatR;
+﻿using EFCore.BulkExtensions;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using RinhaBackend.Cache;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
 
 namespace RinhaBackend.Persons.Events;
 
-public sealed record QueueFlushedEvent(IEnumerable<Person> Persons) : INotification;
+internal sealed record QueueFlushedEvent(IEnumerable<Person> Persons) : INotification;
 
 internal sealed record InsertPersonOnDbQueueFlushedEvent : INotificationHandler<QueueFlushedEvent>
 {
-    private readonly PersonContext _context;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public InsertPersonOnDbQueueFlushedEvent(PersonContext context)
+    public InsertPersonOnDbQueueFlushedEvent(IServiceScopeFactory serviceScopeFactory)
     {
-        _context = context;
+        _serviceScopeFactory = serviceScopeFactory;
     }
+
+    //public InsertPersonOnDbQueueFlushedEvent(PersonContext context)
+    //{
+    //    _context = context;
+    //}
 
     public async Task Handle(QueueFlushedEvent notification, CancellationToken cancellationToken)
     {
-        using var transaction = _context.Database.BeginTransaction();
-        try
-        {
-            await _context.Persons.AddRangeAsync(notification.Persons, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-            transaction.Commit();
-        }
-        catch (Exception)
-        {
-            transaction.Rollback();
-            throw;
-        }
+        using var scope = _serviceScopeFactory.CreateScope();
+        var _context = scope.ServiceProvider.GetRequiredService<PersonContext>();
+        await _context.BulkInsertAsync(notification.Persons, cancellationToken: cancellationToken);
     }
 }

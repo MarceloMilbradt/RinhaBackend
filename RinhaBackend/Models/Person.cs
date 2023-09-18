@@ -1,24 +1,19 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace RinhaBackend.Models;
 
-public class Person
+internal sealed class Person
 {
-
-    public void BuildSearchField()
-    {
-        SearchField = $"{Apelido} {Nome} {Nascimento.ToShortDateString()} {string.Join(' ', Stack)}";
-    }
-
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
-    [MaxLength(32)]
+    [MaxLength(50)]
     public string? Apelido { get; set; }
     [Required]
-    [MaxLength(100)]
+    [MaxLength(150)]
     public string? Nome { get; set; }
     [Required]
     public DateOnly Nascimento { get; set; }

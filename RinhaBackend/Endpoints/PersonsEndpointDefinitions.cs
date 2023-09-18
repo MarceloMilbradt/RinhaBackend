@@ -20,7 +20,7 @@ internal static class PersonsEndpointDefinitions
 
         endpointGroup.MapGet(string.Empty, GetPersons).WithName("GetPersons");
 
-        endpointGroup.MapPost(string.Empty, CreatePersons).AddEndpointFilter<PersonModelValidFilter>();
+        endpointGroup.MapPost(string.Empty, CreatePersons);
 
         application.MapGet("contagem-pessoas", CountPersons);
 
@@ -30,15 +30,19 @@ internal static class PersonsEndpointDefinitions
     {
         return TypedResults.Ok(await PersonContext.CountPersonsCompiledQueryAsync(dbcontext));
     }
-
+    private static string PersonCreatedAtRouteName = nameof(GetPersonById);
     private static async ValueTask<Results<CreatedAtRoute, BadRequest, UnprocessableEntity>> CreatePersons(
         [FromBody] CreatePersonCommand createPersonCommand, [FromServices]ISender sender, CancellationToken cancellationToken)
     {
 
         try
         {
-            var id = await sender.Send(createPersonCommand, cancellationToken);
-            return TypedResults.CreatedAtRoute(nameof(GetPersonById), new { id });
+            var result = await sender.Send(createPersonCommand, cancellationToken);
+            if (!result.CanCreate)
+            {
+                return TypedResults.UnprocessableEntity();
+            }
+            return TypedResults.CreatedAtRoute(PersonCreatedAtRouteName, new { id = result.Id });
         }
         catch (DbUpdateException)
         {
@@ -47,9 +51,9 @@ internal static class PersonsEndpointDefinitions
     }
 
 
-    private static async ValueTask<Results<Ok<IEnumerable<Person>>, BadRequest>> GetPersons(string? t, [FromServices] ISender sender, CancellationToken cancellationToken)
+    private static async ValueTask<Results<Ok<IEnumerable<Person>>, BadRequest>> GetPersons([FromQuery] string? t, [FromServices] ISender sender, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(t))
+        if (t is null)
         {
             return TypedResults.BadRequest();
         }

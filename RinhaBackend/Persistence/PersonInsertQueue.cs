@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace RinhaBackend.Persistence;
 
-public class PersonInsertQueue 
+internal sealed class PersonInsertQueue 
 {
     private readonly ConcurrentQueue<Person> _queue = new ConcurrentQueue<Person>();
 
@@ -14,6 +14,6 @@ public class PersonInsertQueue
 
     public bool TryDequeue(out Person item)
     {
-        return _queue.TryDequeue(out item);
+        return _queue.TryDequeue(out item!);
     }
 }

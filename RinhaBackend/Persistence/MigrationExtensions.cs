@@ -2,7 +2,7 @@
 
 namespace RinhaBackend.Persistence;
 
-public static class MigrationExtensions
+internal static class MigrationExtensions
 {
     public static void InitializeDatabase(this IApplicationBuilder application)
     {

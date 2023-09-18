@@ -1,20 +1,21 @@
 ﻿using MediatR;
 using RinhaBackend.Cache;
+using RinhaBackend.Persistence;
 
 namespace RinhaBackend.Persons.Events;
 
 internal sealed record InsertPersonOnQueueOnPersonCreatedEventHandler : INotificationHandler<PersonCreatedEvent>
 {
-    private readonly IRedisCacheSevice _cacheService;
-    public InsertPersonOnQueueOnPersonCreatedEventHandler(IRedisCacheSevice cacheService)
+    private readonly PersonInsertQueue _queue;
+    public InsertPersonOnQueueOnPersonCreatedEventHandler(PersonInsertQueue queue)
     {
-        _cacheService = cacheService;
+        _queue = queue;
     }
 
-    public async Task Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
+    public Task Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
     {
         var person = notification.Person;
-        await _cacheService.SetAsync(person.Id, person);
-        await _cacheService.SetKeyAsync(person.Apelido);
+        _queue.Enqueue(person);
+        return Task.CompletedTask;
     }
 }

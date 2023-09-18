@@ -60,6 +60,7 @@ services:
       - POSTGRES_USER=rinhabackend
       - POSTGRES_PASSWORD=rinhabackend
       - POSTGRES_DB=rinhabackend
+    command: ["postgres", "-c", "max_connections=300"]
 
   cache:
     image: redis:latest

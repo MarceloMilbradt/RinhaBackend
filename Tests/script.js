@@ -13,7 +13,7 @@ export let options = {
   stages: [
     { duration: '10s', target: 2 }, // warm up
     { duration: '15s', target: 5 }, // are you ready?
-    { duration: '30s', target: 600 }, // lezzz go!!!
+    { duration: '3m', target: 600 }, // lezzz go!!!
 
     // Add other stages for the other scenarios as needed
   ],
@@ -47,7 +47,7 @@ export default function () {
   sleep(Math.random() * (0.03 - 0.001) + 0.001); // pause
 
   // Busca Válida de Pessoas
-  let buscaValidaRes = http.get(`http://localhost:9999/pessoas?t=${term}`);
+  let buscaValidaRes = http.get(`http://localhost:9999/pessoas?t=${encodeURIComponent(term)}`);
   check(buscaValidaRes, {
     'busca válida status is 2xx': r => r.status >= 200 && r.status < 300,
   });

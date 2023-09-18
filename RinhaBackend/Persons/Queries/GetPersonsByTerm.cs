@@ -12,7 +12,7 @@ internal sealed record GetPersonsByTermQuery(string Term) : IRequest<IEnumerable
 {
     public static GetPersonsByTermQuery FromTerm(string term)
     {
-        var normalizedText = term.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var normalizedText = term.RemoveNullBytes().ToLowerInvariant().Normalize(NormalizationForm.FormD);
         return new GetPersonsByTermQuery(normalizedText);
     }
 }
@@ -29,7 +29,7 @@ internal sealed class GetPersonsByTermHandler : IRequestHandler<GetPersonsByTerm
     public async Task<IEnumerable<Person>> Handle(GetPersonsByTermQuery request, CancellationToken cancellationToken)
     {
 
-        var persons = new List<Person>(500);
+        var persons = new List<Person>(50);
         await foreach (var item in PersonContext.SearchPersonsCompiledQueryAsync(_context, request.Term))
         {
             persons.Add(item);

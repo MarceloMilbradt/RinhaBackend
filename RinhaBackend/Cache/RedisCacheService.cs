@@ -2,8 +2,7 @@
 using StackExchange.Redis;
 
 namespace RinhaBackend.Cache;
-
-public sealed class RedisCacheService : IRedisCacheSevice
+internal sealed class RedisCacheService : IRedisCacheSevice
 {
     private readonly IConnectionMultiplexer _connectionMultiplexer;
 
@@ -32,7 +31,7 @@ public sealed class RedisCacheService : IRedisCacheSevice
     {
         var db = _connectionMultiplexer.GetDatabase(1);
         var item = await db.StringGetAsync(key.ToString());
-        return JsonConvert.DeserializeObject<T>(item)!;
+        return JsonConvert.DeserializeObject<T>(item!)!;
     }
 
     public async ValueTask SetAsync<T>(Guid key, T value)

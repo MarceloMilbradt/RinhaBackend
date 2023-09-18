@@ -4,7 +4,7 @@ using RinhaBackend.Models;
 
 namespace RinhaBackend.Persistence;
 
-public class PersonConfiguration : IEntityTypeConfiguration<Person>
+internal sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
 {
     public void Configure(EntityTypeBuilder<Person> builder)
     {
@@ -13,6 +13,5 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
 
         builder.Property(p => p.Nascimento).HasColumnType("date");
         builder.Property(p => p.Stack).HasColumnType("text[]");
-        builder.HasIndex(p => p.SearchField);
     }
 }
