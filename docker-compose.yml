@@ -16,7 +16,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: '0.35'
           memory: '0.6GB'
 
   rinhabackend-api2:
@@ -35,7 +35,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: '0.35'
           memory: '0.6GB'
 
   nginx:
@@ -72,7 +72,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: '0.40'
           memory: '1.4GB'
 
   cache:
