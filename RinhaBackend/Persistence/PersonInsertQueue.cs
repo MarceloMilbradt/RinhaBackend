@@ -5,7 +5,7 @@ namespace RinhaBackend.Persistence;
 
 internal sealed class PersonInsertQueue 
 {
-    private readonly ConcurrentQueue<Person> _queue = new ConcurrentQueue<Person>();
+    private readonly ConcurrentQueue<Person> _queue = new();
 
     public void Enqueue(Person item)
     {

@@ -5,8 +5,8 @@ namespace RinhaBackend.Persons.Events;
 
 internal sealed record CreateCacheItemOnPersonCreatedEventHandler : INotificationHandler<PersonCreatedEvent>
 {
-    private readonly IRedisCacheSevice _cacheService;
-    public CreateCacheItemOnPersonCreatedEventHandler(IRedisCacheSevice cacheService)
+    private readonly RedisCacheService _cacheService;
+    public CreateCacheItemOnPersonCreatedEventHandler(RedisCacheService cacheService)
     {
         _cacheService = cacheService;
     }
@@ -14,7 +14,7 @@ internal sealed record CreateCacheItemOnPersonCreatedEventHandler : INotificatio
     public async Task Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
     {
         var person = notification.Person;
-        await _cacheService.SetAsync(person.Id, person);
+        await _cacheService.SetAsync(person);
         await _cacheService.SetKeyAsync(person.Apelido!);
     }
 }

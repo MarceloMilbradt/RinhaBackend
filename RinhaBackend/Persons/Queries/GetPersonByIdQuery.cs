@@ -11,24 +11,15 @@ internal sealed record GetPersonByIdQuery(Guid Id) : IRequest<Person?>
 }
 
 
-internal sealed class GetPersonByIdQueryHandler : IRequestHandler<GetPersonByIdQuery, Person?>
+internal sealed class GetPersonByIdQueryHandler(RedisCacheService redisCacheSevice, PersonContext context) : IRequestHandler<GetPersonByIdQuery, Person?>
 {
-    private readonly IRedisCacheSevice _redisCacheSevice;
-
-    private readonly PersonContext _context;
-    public GetPersonByIdQueryHandler(IRedisCacheSevice redisCacheSevice, PersonContext context)
-    {
-        _redisCacheSevice = redisCacheSevice;
-        _context = context;
-    }
-
     public async Task<Person?> Handle(GetPersonByIdQuery request, CancellationToken cancellationToken)
     {
-        var person = await _redisCacheSevice.GetItemAsync<Person>(request.Id);
+        var person = await redisCacheSevice.GetItemAsync(request.Id);
         if (person is not null)
         {
             return person;
         }
-        return await PersonContext.FindPersonByIdCompiledQueryAsync(_context, request.Id);
+        return await PersonContext.FindPersonByIdCompiledQueryAsync(context, request.Id);
     }
 }

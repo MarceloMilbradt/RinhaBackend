@@ -1,6 +1,4 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using RinhaBackend.Cache;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
 using System.Text;
@@ -18,13 +16,9 @@ internal sealed record GetPersonsByTermQuery(string Term) : IRequest<IEnumerable
 }
 
 
-internal sealed class GetPersonsByTermHandler : IRequestHandler<GetPersonsByTermQuery, IEnumerable<Person>>
+internal sealed class GetPersonsByTermHandler(PersonContext context) : IRequestHandler<GetPersonsByTermQuery, IEnumerable<Person>>
 {
-    private readonly PersonContext _context;
-    public GetPersonsByTermHandler(PersonContext context)
-    {
-        _context = context;
-    }
+    private readonly PersonContext _context = context;
 
     public async Task<IEnumerable<Person>> Handle(GetPersonsByTermQuery request, CancellationToken cancellationToken)
     {

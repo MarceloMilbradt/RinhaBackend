@@ -4,20 +4,35 @@ namespace System;
 
 public static class StringExtensions
 {
+
     public static string RemoveNullBytes(this string input)
     {
         if (string.IsNullOrEmpty(input))
             return input;
 
-        var sb = new StringBuilder(input.Length);
-        foreach (var c in input)
+        ReadOnlySpan<char> span = [.. input];
+        int nullByteCount = 0;
+        for (int i = 0; i < span.Length; i++)
         {
-            if (c != '\0')
+            if (span[i] == '\0')
             {
-                sb.Append(c);
+                nullByteCount++;
             }
         }
 
-        return sb.ToString();
+        if (nullByteCount == 0)
+            return input;
+
+        char[] newArray = new char[span.Length - nullByteCount];
+        int idx = 0;
+        for (int i = 0; i < span.Length; i++)
+        {
+            if (span[i] != '\0')
+            {
+                newArray[idx++] = span[i];
+            }
+        }
+
+        return new string(newArray);
     }
 }

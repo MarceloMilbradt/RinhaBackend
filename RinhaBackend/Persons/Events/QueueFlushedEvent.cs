@@ -18,11 +18,6 @@ internal sealed record InsertPersonOnDbQueueFlushedEvent : INotificationHandler<
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    //public InsertPersonOnDbQueueFlushedEvent(PersonContext context)
-    //{
-    //    _context = context;
-    //}
-
     public async Task Handle(QueueFlushedEvent notification, CancellationToken cancellationToken)
     {
         using var scope = _serviceScopeFactory.CreateScope();

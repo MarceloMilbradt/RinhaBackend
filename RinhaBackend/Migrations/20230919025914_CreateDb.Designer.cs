@@ -13,8 +13,8 @@ using RinhaBackend.Persistence;
 namespace RinhaBackend.Migrations
 {
     [DbContext(typeof(PersonContext))]
-    [Migration("20230917144302_AddDateInSearchTerm")]
-    partial class AddDateInSearchTerm
+    [Migration("20230919025914_CreateDb")]
+    partial class CreateDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,21 +33,20 @@ namespace RinhaBackend.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Apelido")
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateOnly>("Nascimento")
                         .HasColumnType("date");
 
                     b.Property<string>("Nome")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("SearchField")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("text")
-                        .HasComputedColumnSql(" immutable_unaccent(lower(\"Apelido\")) || ' ' || \r\n immutable_unaccent(lower(\"Nome\")) || ' ' || \r\n CURRENT_DATE || ' ' || \r\n immutable_unaccent(lower(array_to_string_immutable(\"Stack\", ' ')))", true);
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<List<string>>("Stack")
                         .IsRequired()
@@ -56,8 +55,6 @@ namespace RinhaBackend.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Id");
-
-                    b.HasIndex("SearchField");
 
                     b.ToTable("Persons");
                 });

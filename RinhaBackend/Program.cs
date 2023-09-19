@@ -1,59 +1,81 @@
 using MediatR;
-using MediatR.NotificationPublishers;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RinhaBackend.BackgroundServices;
 using RinhaBackend.Cache;
-using RinhaBackend.Endpoints;
-using RinhaBackend.Filters;
 using RinhaBackend.Persistence;
-using RinhaBackend.Pipeline;
+using RinhaBackend.Persons.Commands;
+using RinhaBackend.Persons.Queries;
 using StackExchange.Redis;
-using System.Reflection;
 
-var builder = WebApplication.CreateBuilder(args);
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-}
+var builder = WebApplication.CreateSlimBuilder(args);
 
-builder.Services.AddTransient<RequestErrorCaptureMiddleware>();
 builder.Services.AddSingleton<PersonInsertQueue>();
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     s => ConnectionMultiplexer.Connect("cache"));
-builder.Services.AddScoped<IRedisCacheSevice, RedisCacheService>();
+
+builder.Services.AddScoped<RedisCacheService>();
 builder.Services.AddHostedService<PersonDatabaseWorker>();
 
-builder.Services.AddMediatR(options =>
-{
-    options.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-    options.NotificationPublisher = new FireAndForgetNotificationPublisher();
-    options.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PersonValidationBehavior<,>));
-});
 
-builder.Services.AddDbContext<PersonContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("RinhaBackend"),
-            builder =>
-            {
-                builder.CommandTimeout(60);
-
-                builder.MigrationsAssembly(typeof(PersonContext).Assembly.FullName);
-                builder.EnableRetryOnFailure();
-            }));
+builder.Services.AddCompileTimeJsonSerializers();
+builder.Services.AddMediatR();
+builder.Services.AddPersonContext(builder.Configuration.GetConnectionString("RinhaBackend"));
 
 
 var app = builder.Build();
 
+var pessoasApi = app.MapGroup("/pessoas");
 
-if (app.Environment.IsDevelopment())
+pessoasApi.MapGet("/", async ([FromQuery] string? t, [FromServices] ISender sender, CancellationToken cancellationToken) =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    if (t is null)
+    {
+        return Results.BadRequest();
+    }
 
-app.UseMiddleware<RequestErrorCaptureMiddleware>();
+    var persons = await sender.Send(GetPersonsByTermQuery.FromTerm(t), cancellationToken);
+    return Results.Ok(persons);
+});
 
-app.UsePessoasEndpoints();
+pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] ISender sender, CancellationToken cancellationToken) =>
+{
+    var person = await sender.Send(GetPersonByIdQuery.FromId(id), cancellationToken);
+    if (person is null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(person);
+
+}).WithName("GetById");
+
+
+app.MapGet("/contagem-pessoas", async (PersonContext dbcontext, CancellationToken cancellationToken) =>
+{
+    return Results.Ok(await PersonContext.CountPersonsCompiledQueryAsync(dbcontext));
+});
+
+
+pessoasApi.MapPost("/", async ([FromBody] CreatePersonCommand createPersonCommand, [FromServices] ISender sender, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await sender.Send(createPersonCommand, cancellationToken);
+        if (!result.CanCreate)
+        {
+            return Results.UnprocessableEntity();
+        }
+        return Results.CreatedAtRoute("GetById", new { id = result.Id });
+    }
+    catch (DbUpdateException)
+    {
+        return Results.UnprocessableEntity();
+    }
+});
+
+
+
 
 app.InitializeDatabase();
 app.Run();

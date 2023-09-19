@@ -1,45 +1,37 @@
 version: '3.8'
 
 services:
-  rinhabackend:
+  rinhabackend-api:
     image: ${DOCKER_REGISTRY-}rinhabackend:latest
-    container_name: rinhabackend
+    container_name: rinhabackend-api
     depends_on:
       - db
     networks:
       - api_network
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=https://+:443;http://+:80
-    ports:
+      - ASPNETCORE_URLS=http://+:80
+    expose:
       - "80"
-      - "443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     deploy:
       resources:
         limits:
           cpus: '0.3'
           memory: '0.6GB'
 
-  rinhabackend2:
+  rinhabackend-api2:
     image: ${DOCKER_REGISTRY-}rinhabackend:latest
-    container_name: rinhabackend2
+    container_name: rinhabackend-api2
     depends_on:
       - db
-      - rinhabackend
+      - rinhabackend-api
     networks:
       - api_network
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=https://+:443;http://+:80
-    ports:
+      - ASPNETCORE_URLS=http://+:80
+    expose:
       - "80"
-      - "443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     deploy:
       resources:
         limits:
@@ -52,8 +44,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Map the nginx.conf file
     depends_on:
-      - rinhabackend
-      - rinhabackend2
+      - rinhabackend-api
+      - rinhabackend-api2
     networks:
       - api_network
     ports:
@@ -74,7 +66,9 @@ services:
       - POSTGRES_USER=rinhabackend
       - POSTGRES_PASSWORD=rinhabackend
       - POSTGRES_DB=rinhabackend
-    command: ["postgres", "-c", "max_connections=300"]
+    volumes:
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     deploy:
       resources:
         limits:

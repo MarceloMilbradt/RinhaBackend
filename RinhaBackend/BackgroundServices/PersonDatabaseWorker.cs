@@ -9,51 +9,36 @@ using System.Threading;
 
 namespace RinhaBackend.BackgroundServices;
 
-internal sealed class PersonDatabaseWorker : BackgroundService
+internal sealed class PersonDatabaseWorker(PersonInsertQueue queue, IPublisher publisher) : BackgroundService
 {
-    private readonly PersonInsertQueue _queue;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(2);
-    private const int SizeThreshold = 200;  // Size threshold for immediate processing
-
-    public PersonDatabaseWorker(PersonInsertQueue queue, IServiceScopeFactory serviceScopeFactory)
-    {
-        _queue = queue;
-        _serviceScopeFactory = serviceScopeFactory;
-    }
+    private const int SizeThreshold = 250;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var personToInsert = new List<Person>(SizeThreshold);
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            var personToInsert = new List<Person>();
-            while (_queue.TryDequeue(out var item))
+            while (queue.TryDequeue(out var item))
             {
                 personToInsert.Add(item);
 
-                // If we reach the size threshold, flush the queue and break out of the loop
                 if (personToInsert.Count >= SizeThreshold)
                 {
-                    await FlushQueue(personToInsert, stoppingToken);
+                    await publisher.Publish(new QueueFlushedEvent(personToInsert), stoppingToken);
                     personToInsert.Clear();
                 }
             }
 
-            // If there are any leftover items after breaking the loop or if the loop completes normally
-            if (personToInsert.Any())
+            if (personToInsert.Count != 0)
             {
-                await FlushQueue(personToInsert, stoppingToken);
+                await publisher.Publish(new QueueFlushedEvent(personToInsert), stoppingToken);
+                personToInsert.Clear();
             }
 
             await Task.Delay(_interval, stoppingToken);
         }
     }
 
-    private async Task FlushQueue(IEnumerable<Person> items, CancellationToken stoppingToken)
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        var _context = scope.ServiceProvider.GetRequiredService<PersonContext>();
-        await _context.BulkInsertAsync(items, cancellationToken: stoppingToken);
-    }
 }
