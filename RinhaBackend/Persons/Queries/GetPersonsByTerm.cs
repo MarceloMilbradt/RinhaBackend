@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Text;
 namespace RinhaBackend.Persons.Queries;
 
 
-internal sealed record GetPersonsByTermQuery(string Term) : IRequest<IEnumerable<Person>>
+internal sealed record GetPersonsByTermQuery(string Term) : IRequest<List<Person>>
 {
     public static GetPersonsByTermQuery FromTerm(string term)
     {
@@ -16,18 +17,10 @@ internal sealed record GetPersonsByTermQuery(string Term) : IRequest<IEnumerable
 }
 
 
-internal sealed class GetPersonsByTermHandler(PersonContext context) : IRequestHandler<GetPersonsByTermQuery, IEnumerable<Person>>
+internal sealed class GetPersonsByTermHandler(PersonContext context) : IRequestHandler<GetPersonsByTermQuery, List<Person>>
 {
-    private readonly PersonContext _context = context;
-
-    public async Task<IEnumerable<Person>> Handle(GetPersonsByTermQuery request, CancellationToken cancellationToken)
+    public Task<List<Person>> Handle(GetPersonsByTermQuery request, CancellationToken cancellationToken)
     {
-
-        var persons = new List<Person>(50);
-        await foreach (var item in PersonContext.SearchPersonsCompiledQueryAsync(_context, request.Term))
-        {
-            persons.Add(item);
-        }
-        return persons;
+        return context.Persons.AsNoTracking().Where(c => c.SearchField!.Contains(request.Term)).Take(50).ToListAsync(cancellationToken: cancellationToken);
     }
 }

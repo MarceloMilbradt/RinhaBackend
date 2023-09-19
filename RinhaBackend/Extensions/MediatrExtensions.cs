@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using MediatR.NotificationPublishers;
 using RinhaBackend.Pipeline;
 using System.Reflection;
 
@@ -11,7 +12,7 @@ public static class MediatrExtensions
         services.AddMediatR(options =>
         {
             options.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            options.NotificationPublisher = new FireAndForgetNotificationPublisher();
+            options.NotificationPublisher = new TaskWhenAllPublisher();
             options.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PersonValidationBehavior<,>));
         });
         return services;

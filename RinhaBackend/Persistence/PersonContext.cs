@@ -20,10 +20,6 @@ internal sealed class PersonContext : DbContext
     }
 
 
-    public static readonly Func<PersonContext, string, IAsyncEnumerable<Person>> SearchPersonsCompiledQueryAsync =
-    EF.CompileAsyncQuery((PersonContext context, string term) =>
-        context.Persons.AsNoTracking().Where(c => c.SearchField!.Contains(term)).Take(50));
-
     public static readonly Func<PersonContext, Task<int>> CountPersonsCompiledQueryAsync =
     EF.CompileAsyncQuery((PersonContext context) => context.Persons.Count());
 
