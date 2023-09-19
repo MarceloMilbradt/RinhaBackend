@@ -15,7 +15,7 @@ internal sealed class PersonService(PersonInsertQueue personInsertQueue, RedisCa
         if (string.IsNullOrWhiteSpace(personDto.Apelido) || string.IsNullOrWhiteSpace(personDto.Nome))
             return false;
         
-        if (personDto.Stack?.All(s => !string.IsNullOrWhiteSpace(s)) ?? false)
+        if (personDto.Stack?.Any(s => string.IsNullOrWhiteSpace(s)) ?? false)
             return false;
 
         return !await redisCacheService.KeyExistsAsync(personDto.Apelido);

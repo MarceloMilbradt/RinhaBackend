@@ -27,7 +27,9 @@ internal sealed class RedisCacheService(IConnectionMultiplexer connectionMultipl
         var item = await db.StringGetAsync(key.ToString());
         if (item.HasValue)
         {
-            return MemoryPackSerializer.Deserialize<Person>((byte[])item);
+            Person person = new();
+            MemoryPackSerializer.Deserialize((byte[])item, ref person);
+            return person;
         }
         return null;
     }

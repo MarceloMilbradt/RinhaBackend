@@ -1,11 +1,11 @@
-@RinhaBackEndNativeAot_HostAddress = http://localhost:8080
+@RinhaBackEndNativeAot_HostAddress = http://localhost:5270
 
 GET {{RinhaBackEndNativeAot_HostAddress}}/pessoas
 Accept: application/json
 
 ###
 
-GET {{RinhaBackEndNativeAot_HostAddress}}/pessoas/cecbfdf2-136c-4489-b093-8027cf74ca4b
+GET {{RinhaBackEndNativeAot_HostAddress}}/pessoas/4d9457aa-430f-4445-af69-fd02ee0b5c4f
 Accept: application/json
 
 ###
@@ -15,7 +15,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "Apelido": "Teste",
+    "Apelido": "Testex",
     "Nome": "Teste",
     "Nascimento": "1999-08-23",
     "Stack": ["Item1", "Item2"] 
