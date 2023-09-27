@@ -102,22 +102,6 @@ internal sealed class PersonRepository(RedisCacheService redisCacheService)
         return Convert.ToInt32(await new NpgsqlCommand(@"SELECT COUNT(*) FROM public.""Persons""", conn).ExecuteScalarAsync());
     }
 
-    internal static async Task BulkInsertAsync(IEnumerable<Person> items, CancellationToken cancellationToken)
-    {
-        await using var connection = await CreateAndOpenConnectionAsync(cancellationToken);
-        await using var writer = connection.BeginBinaryImport(SqlBulkInsert);
 
-        foreach (var item in items)
-        {
-            await writer.StartRowAsync(cancellationToken);
-            await writer.WriteAsync(item.Id, NpgsqlDbType.Uuid, cancellationToken);
-            await writer.WriteAsync(item.Apelido, NpgsqlDbType.Text, cancellationToken);
-            await writer.WriteAsync(item.Nome, NpgsqlDbType.Text, cancellationToken);
-            await writer.WriteAsync(item.Nascimento, NpgsqlDbType.Date, cancellationToken);
-            await writer.WriteAsync(string.Join(",", item.Stack), NpgsqlDbType.Text, cancellationToken);
-            await writer.WriteAsync(item.SearchField, NpgsqlDbType.Text, cancellationToken);
-        }
-
-        await writer.CompleteAsync(cancellationToken);
-    }
+    
 }

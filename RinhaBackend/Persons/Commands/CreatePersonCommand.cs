@@ -1,29 +1,35 @@
-﻿using MediatR;
+﻿using Mediator;
+using RinhaBackend.Cache;
 using RinhaBackend.Models;
+using RinhaBackend.Persistence;
 using RinhaBackend.Persons.Events;
 
 namespace RinhaBackend.Persons.Commands;
-internal sealed record CreatePersonCommand(string? Apelido, string? Nome, DateOnly Nascimento, string[]? Stack) : ICreatePersonRequestWithValidation;
-internal sealed class CreatePersonCommandHandler(IPublisher publisher) : IRequestHandler<CreatePersonCommand, CreatePersonResult>
+public sealed record CreatePersonCommand(string? Apelido, string? Nome, DateTime Nascimento, string[]? Stack) : IRequest<CreatePersonResult>;
+public sealed class CreatePersonCommandHandler(IPublisher publisher, IPersonRepository repository) : IRequestHandler<CreatePersonCommand, CreatePersonResult>
 {
-    private const char TrimChar = '\0';
-
-    public async Task<CreatePersonResult> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
+    public async ValueTask<CreatePersonResult> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
     {
-        var trimmedStackItems = (request.Stack ?? [])
-                .Select(item => item.TrimEnd(TrimChar))
-                .ToList();
+
+        if (string.IsNullOrWhiteSpace(request.Apelido))
+            return CreatePersonResult.Fail;
+
+        if (string.IsNullOrWhiteSpace(request.Nome))
+            return CreatePersonResult.Fail;
+
+        if (request.Stack != null && request.Stack.Any(s => string.IsNullOrWhiteSpace(s)))
+            return CreatePersonResult.Fail;
+
         Person person = new()
         {
             Id = Guid.NewGuid(),
-            Apelido = (request.Apelido).TrimEnd(TrimChar),
-            Nome = (request.Nome).TrimEnd('\0'),
+            Apelido = request.Apelido,
+            Nome = request.Nome,
             Nascimento = request.Nascimento,
-            Stack = trimmedStackItems,
+            Stack = request.Stack ?? [],
         };
-        person.SearchField = TermGenerator.BuildSearchField(person).ToString();
+        await repository.Create(person, cancellationToken);
         await publisher.Publish(PersonCreatedEvent.From(person), cancellationToken);
         return CreatePersonResult.Success(person.Id);
     }
-
 }

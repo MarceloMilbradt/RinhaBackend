@@ -16,8 +16,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.35'
-          memory: '0.6GB'
+          cpus: '0.2'
+          memory: '0.2GB'
 
   rinhabackend-api2:
     image: ${DOCKER_REGISTRY-}rinhabackend:latest
@@ -35,8 +35,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.35'
-          memory: '0.6GB'
+          cpus: '0.2'
+          memory: '0.2GB'
 
   nginx:
     image: nginx:latest
@@ -54,7 +54,7 @@ services:
       resources:
         limits:
           cpus: '0.2'
-          memory: '0.2GB'
+          memory: '0.5GB'
   db:
     image: postgres:latest
     container_name: postgres_db
@@ -67,13 +67,14 @@ services:
       - POSTGRES_PASSWORD=rinhabackend
       - POSTGRES_DB=rinhabackend
     volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgresql.conf:/etc/postgresql/postgresql.conf
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     deploy:
       resources:
         limits:
-          cpus: '0.40'
-          memory: '1.4GB'
+          cpus: '0.7'
+          memory: '1.8GB'
 
   cache:
     image: redis:latest
@@ -81,11 +82,12 @@ services:
       - api_network
     ports:
       - '6379:6379' 
+    command: redis-server --save "" --appendonly no --maxclients 20000
     deploy:
       resources:
         limits:
-          cpus: '0.2'
-          memory: '0.8GB'
+          cpus: '0.15'
+          memory: '0.3GB'
 
 
 networks:

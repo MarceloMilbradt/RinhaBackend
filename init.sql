@@ -1,13 +1,13 @@
-CREATE EXTENSION pg_trgm;
-CREATE TABLE  IF NOT EXISTS "Persons" (
-
-	"Id" uuid NOT NULL,
-	"Apelido" varchar(50) NULL,
-	"Nome" varchar(150) NOT NULL,
-	"Nascimento" date NOT NULL,
-	"Stack" text NOT NULL,
-	"SearchField" varchar(500) NULL,
-	CONSTRAINT "PK_Persons" PRIMARY KEY ("Id")
+CREATE EXTENSION PG_TRGM;
+CREATE TABLE IF NOT EXISTS "Persons" (
+    "Id" uuid NOT NULL,
+    "Apelido" VARCHAR(40) CONSTRAINT PK_Persons PRIMARY key NOT NULL,
+    "Nome" VARCHAR(120),
+    "Nascimento" date,
+    "Stack" VARCHAR(1024),
+    "SearchField" TEXT GENERATED ALWAYS AS (
+        LOWER("Nome" || "Apelido" || "Stack")
+    ) STORED
 );
-CREATE INDEX "IX_Persons_Id" ON public."Persons" USING btree ("Id");
-CREATE INDEX idx_searchfield_trgm_gin ON public."Persons" USING gin ("SearchField" gin_trgm_ops);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS IDX_PESSOAS_BUSCA_TGRM ON "Persons" USING GIST ("SearchField" GIST_TRGM_OPS(SIGLEN=64));

@@ -1,9 +1,9 @@
-﻿using MediatR;
+﻿using Mediator;
 using RinhaBackend.Cache;
 
 namespace RinhaBackend.Persons.Events;
 
-internal sealed record CreateCacheItemOnPersonCreatedEventHandler : INotificationHandler<PersonCreatedEvent>
+public sealed record CreateCacheItemOnPersonCreatedEventHandler : INotificationHandler<PersonCreatedEvent>
 {
     private readonly RedisCacheService _cacheService;
     public CreateCacheItemOnPersonCreatedEventHandler(RedisCacheService cacheService)
@@ -11,7 +11,7 @@ internal sealed record CreateCacheItemOnPersonCreatedEventHandler : INotificatio
         _cacheService = cacheService;
     }
 
-    public async Task Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
     {
         var person = notification.Person;
         await _cacheService.SetAsync(person);

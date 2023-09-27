@@ -1,25 +1,25 @@
-﻿using MediatR;
+﻿using Mediator;
 using RinhaBackend.Cache;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
 
 namespace RinhaBackend.Persons.Queries;
 
-internal sealed record GetPersonByIdQuery(Guid Id) : IRequest<Person?>
+public sealed record GetPersonByIdQuery(Guid Id) : IRequest<Person?>
 {
-    public static GetPersonByIdQuery FromId(Guid id) => new GetPersonByIdQuery(id);
+    public static GetPersonByIdQuery FromId(Guid id) => new(id);
 }
 
 
-internal sealed class GetPersonByIdQueryHandler(RedisCacheService redisCacheSevice, PersonContext context) : IRequestHandler<GetPersonByIdQuery, Person?>
+public sealed class GetPersonByIdQueryHandler(RedisCacheService redisCacheSevice, IPersonRepository repository) : IRequestHandler<GetPersonByIdQuery, Person?>
 {
-    public async Task<Person?> Handle(GetPersonByIdQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Person?> Handle(GetPersonByIdQuery request, CancellationToken cancellationToken)
     {
         var person = await redisCacheSevice.GetItemAsync(request.Id);
-        if (person is not null)
+        if (person != null)
         {
             return person;
         }
-        return await PersonContext.FindPersonByIdCompiledQueryAsync(context, request.Id);
+        return await repository.GetByIdAsync(request.Id, cancellationToken);
     }
 }

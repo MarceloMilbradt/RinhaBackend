@@ -1,6 +1,5 @@
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using RinhaBackend.BackgroundServices;
 using RinhaBackend.Cache;
 using RinhaBackend.Persistence;
@@ -16,12 +15,12 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
     s => ConnectionMultiplexer.Connect("cache"));
 
 builder.Services.AddScoped<RedisCacheService>();
-builder.Services.AddHostedService<PersonDatabaseWorker>();
+//builder.Services.AddHostedService<PersonDatabaseWorker>();
 
 
 builder.Services.AddCompileTimeJsonSerializers();
 builder.Services.AddMediatR();
-builder.Services.AddPersonContext(builder.Configuration.GetConnectionString("RinhaBackend"));
+builder.Services.AddPersonContext(builder.Configuration);
 
 
 var app = builder.Build();
@@ -51,12 +50,12 @@ pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] ISend
 }).WithName("GetById");
 
 
-app.MapGet("/contagem-pessoas", async (PersonContext dbcontext, CancellationToken cancellationToken) =>
+app.MapGet("/contagem-pessoas", async (IPersonRepository repository, CancellationToken cancellationToken) =>
 {
-    return Results.Ok(await PersonContext.CountPersonsCompiledQueryAsync(dbcontext));
+    return Results.Ok(await repository.Count());
 });
 
-
+var getByIdRoute = "GetById";
 pessoasApi.MapPost("/", async ([FromBody] CreatePersonCommand createPersonCommand, [FromServices] ISender sender, CancellationToken cancellationToken) =>
 {
     try
@@ -66,16 +65,13 @@ pessoasApi.MapPost("/", async ([FromBody] CreatePersonCommand createPersonComman
         {
             return Results.UnprocessableEntity();
         }
-        return Results.CreatedAtRoute("GetById", new { id = result.Id });
+        return Results.CreatedAtRoute(getByIdRoute, new { id = result.Id });
     }
-    catch (DbUpdateException)
+    catch (Exception)
     {
         return Results.UnprocessableEntity();
     }
 });
 
 
-
-
-app.InitializeDatabase();
 app.Run();

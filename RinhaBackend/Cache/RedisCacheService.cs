@@ -1,12 +1,10 @@
 ﻿using MemoryPack;
-using Newtonsoft.Json;
 using RinhaBackend.Models;
 using StackExchange.Redis;
 
 namespace RinhaBackend.Cache;
-internal sealed class RedisCacheService(IConnectionMultiplexer connectionMultiplexer)
+public sealed class RedisCacheService(IConnectionMultiplexer connectionMultiplexer)
 {
-    private Person _cachedPerson;
     public async ValueTask<bool> KeyExistsAsync(string key)
     {
         var db = connectionMultiplexer.GetDatabase();
@@ -26,6 +24,7 @@ internal sealed class RedisCacheService(IConnectionMultiplexer connectionMultipl
         var item = await db.StringGetAsync(key.ToString());
         if (item.HasValue)
         {
+            Person _cachedPerson = new();
             MemoryPackSerializer.Deserialize((byte[])item, ref _cachedPerson);
             return _cachedPerson;
         }

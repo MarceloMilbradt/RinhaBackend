@@ -1,27 +1,21 @@
-﻿using EFCore.BulkExtensions;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using RinhaBackend.Cache;
+﻿using Mediator;
 using RinhaBackend.Models;
 using RinhaBackend.Persistence;
 
 namespace RinhaBackend.Persons.Events;
 
-internal sealed record QueueFlushedEvent(IEnumerable<Person> Persons) : INotification;
+public sealed record QueueFlushedEvent(IEnumerable<Person> Persons) : INotification;
 
-internal sealed record InsertPersonOnDbQueueFlushedEvent : INotificationHandler<QueueFlushedEvent>
+public sealed record InsertPersonOnDbQueueFlushedEvent : INotificationHandler<QueueFlushedEvent>
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-
-    public InsertPersonOnDbQueueFlushedEvent(IServiceScopeFactory serviceScopeFactory)
+    private readonly IPersonRepository _repository;
+    public InsertPersonOnDbQueueFlushedEvent(IPersonRepository repository)
     {
-        _serviceScopeFactory = serviceScopeFactory;
+        _repository = repository;
     }
 
-    public async Task Handle(QueueFlushedEvent notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(QueueFlushedEvent notification, CancellationToken cancellationToken)
     {
-        using var scope = _serviceScopeFactory.CreateScope();
-        var _context = scope.ServiceProvider.GetRequiredService<PersonContext>();
-        await _context.BulkInsertAsync(notification.Persons, cancellationToken: cancellationToken);
+        await _repository.BulkInsertAsync(notification.Persons,cancellationToken);
     }
 }

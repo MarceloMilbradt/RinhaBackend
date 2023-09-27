@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace RinhaBackend.Persistence;
 
-internal sealed class PersonInsertQueue 
+public sealed class PersonInsertQueue 
 {
     private readonly ConcurrentQueue<Person> _queue = new();
 

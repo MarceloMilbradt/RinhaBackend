@@ -1,21 +1,36 @@
-﻿using MediatR;
+﻿using Mediator;
 using RinhaBackend.Cache;
 using RinhaBackend.Persistence;
 
 namespace RinhaBackend.Persons.Events;
 
-internal sealed record InsertPersonOnQueueOnPersonCreatedEventHandler : INotificationHandler<PersonCreatedEvent>
+//public sealed record InsertPersonOnQueueOnPersonCreatedEventHandler : INotificationHandler<PersonCreatedEvent>
+//{
+//    private readonly PersonInsertQueue _queue;
+//    public InsertPersonOnQueueOnPersonCreatedEventHandler(PersonInsertQueue queue)
+//    {
+//        _queue = queue;
+//    }
+
+//    public ValueTask Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
+//    {
+//        var person = notification.Person;
+//        _queue.Enqueue(person);
+//        return ValueTask.CompletedTask;
+//    }
+//}
+
+public sealed record InsertPersonOnDbOnPersonCreatedEventHandler : INotificationHandler<PersonCreatedEvent>
 {
-    private readonly PersonInsertQueue _queue;
-    public InsertPersonOnQueueOnPersonCreatedEventHandler(PersonInsertQueue queue)
+    private readonly IPersonRepository _repository;
+    public InsertPersonOnDbOnPersonCreatedEventHandler(IPersonRepository repository)
     {
-        _queue = queue;
+        _repository = repository;
     }
 
-    public Task Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(PersonCreatedEvent notification, CancellationToken cancellationToken)
     {
         var person = notification.Person;
-        _queue.Enqueue(person);
-        return Task.CompletedTask;
+        await _repository.Create(person, cancellationToken);
     }
 }

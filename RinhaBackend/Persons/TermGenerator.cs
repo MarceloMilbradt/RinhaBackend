@@ -1,11 +1,26 @@
 ﻿using RinhaBackend.Models;
 using System.Buffers;
+using System.Text;
 
 namespace RinhaBackend.Persons;
 
 internal static class TermGenerator
 {
     private const char SPACE = ' ';
+
+    public static string BuildSearchTerm(Person person)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append(person.Apelido);
+        stringBuilder.Append(SPACE);
+        stringBuilder.Append(person.Nome);
+        foreach (var stack in person.Stack)
+        {
+            stringBuilder.Append(SPACE);
+            stringBuilder.Append(stack);
+        }
+        return stringBuilder.ToString();
+    }
     public static ReadOnlySpan<char> BuildSearchField(Person person)
     {
         int totalLength = person.Apelido.Length + person.Nome.Length + 2;
@@ -27,6 +42,14 @@ internal static class TermGenerator
         {
             currentIndex = CopyAndAdvance(charArray, currentIndex, item);
             currentIndex = CopyAndAdvance(charArray, currentIndex, SPACE);
+        }
+
+        for (int i = 0; i < currentIndex; i++)
+        {
+            if (char.IsUpper(charArray[i]))
+            {
+                charArray[i] = char.ToLowerInvariant(charArray[i]);
+            }
         }
 
         ReadOnlySpan<char> result = charArray.AsSpan(0, currentIndex);

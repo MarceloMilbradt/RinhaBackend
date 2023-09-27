@@ -16,12 +16,13 @@ public static class JsonExtensions
     }
 
 }
+
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Default)]
 [JsonSerializable(typeof(Person))]
 [JsonSerializable(typeof(CreatePersonCommand))]
-[JsonSerializable(typeof(IEnumerable<Person>))]
+[JsonSerializable(typeof(List<Person>))]
 [JsonSerializable(typeof(int))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext
 {
