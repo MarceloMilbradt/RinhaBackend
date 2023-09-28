@@ -33,7 +33,7 @@ export default function () {
       'Content-Type': 'application/json',
     },
   });
-  
+
   check(criaRes, {
     'criação status is 201, 422, or 400': r => [201, 422, 400].includes(r.status),
   });
@@ -43,11 +43,14 @@ export default function () {
     let location = criaRes.headers.Location;
     let consultaRes = http.get(location);
   }
-  
+
   sleep(Math.random() * (0.03 - 0.001) + 0.001); // pause
 
   // Busca Válida de Pessoas
   let buscaValidaRes = http.get(`http://localhost:9999/pessoas?t=${encodeURIComponent(term)}`);
+  if (buscaValidaRes.status >= 300) {
+    console.log(term);
+  }
   check(buscaValidaRes, {
     'busca válida status is 2xx': r => r.status >= 200 && r.status < 300,
   });

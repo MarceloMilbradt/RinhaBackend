@@ -1,77 +1,63 @@
-using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using RinhaBackend.BackgroundServices;
-using RinhaBackend.Cache;
-using RinhaBackend.Persistence;
-using RinhaBackend.Persons.Commands;
-using RinhaBackend.Persons.Queries;
-using StackExchange.Redis;
+using RinhaBackend.Application;
+
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
-builder.Services.AddSingleton<PersonInsertQueue>();
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+});
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    s => ConnectionMultiplexer.Connect("cache"));
-
-builder.Services.AddScoped<RedisCacheService>();
-//builder.Services.AddHostedService<PersonDatabaseWorker>();
-
-
-builder.Services.AddCompileTimeJsonSerializers();
-builder.Services.AddMediatR();
-builder.Services.AddPersonContext(builder.Configuration);
-
+builder.Services.AddRequiredServices();
 
 var app = builder.Build();
 
+
+
 var pessoasApi = app.MapGroup("/pessoas");
 
-pessoasApi.MapGet("/", async ([FromQuery] string? t, [FromServices] ISender sender, CancellationToken cancellationToken) =>
+pessoasApi.MapGet("/", async ([FromQuery] string? t, CancellationToken token) =>
 {
     if (t is null)
     {
         return Results.BadRequest();
     }
-
-    var persons = await sender.Send(GetPersonsByTermQuery.FromTerm(t), cancellationToken);
-    return Results.Ok(persons);
+    return Results.Ok(await PersonRepository.SearchPersonsAsync(t, token));
 });
 
-pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] ISender sender, CancellationToken cancellationToken) =>
+var getById = "GetById";
+pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] PersonRepository repository, CancellationToken token) =>
 {
-    var person = await sender.Send(GetPersonByIdQuery.FromId(id), cancellationToken);
-    if (person is null)
+    if (id == Guid.Empty)
     {
-        return Results.NotFound();
+        return Results.BadRequest();
     }
-    return Results.Ok(person);
+    return Results.Ok(await repository.GetByIdAsync(id, token));
+}).WithName(getById);
 
-}).WithName("GetById");
 
-
-app.MapGet("/contagem-pessoas", async (IPersonRepository repository, CancellationToken cancellationToken) =>
+app.MapGet("/contagem-pessoas", async () =>
 {
-    return Results.Ok(await repository.Count());
+    return Results.Ok(await PersonRepository.CountPersonsAsync());
 });
 
-var getByIdRoute = "GetById";
-pessoasApi.MapPost("/", async ([FromBody] CreatePersonCommand createPersonCommand, [FromServices] ISender sender, CancellationToken cancellationToken) =>
+pessoasApi.MapPost("/", async ([FromBody] Person person, [FromServices] PersonService service, CancellationToken token) =>
 {
+    var canCreate = await service.ValidateAsync(person);
+    if (!canCreate) return Results.UnprocessableEntity();
     try
     {
-        var result = await sender.Send(createPersonCommand, cancellationToken);
-        if (!result.CanCreate)
-        {
-            return Results.UnprocessableEntity();
-        }
-        return Results.CreatedAtRoute(getByIdRoute, new { id = result.Id });
+        var id = await service.Create(person, token);
+        var routeValues = new RouteValueDictionary() { ["id"] = id };
+        return Results.CreatedAtRoute(getById, routeValues);
     }
-    catch (Exception)
+    catch
     {
         return Results.UnprocessableEntity();
     }
 });
+
 
 
 app.Run();

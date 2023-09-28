@@ -17,7 +17,7 @@ services:
       resources:
         limits:
           cpus: '0.3'
-          memory: '0.6GB'
+          memory: '0.65GB'
 
   rinhabackend-api2:
     image: ${DOCKER_REGISTRY-}rinhabackendnativeaot:latest
@@ -36,7 +36,7 @@ services:
       resources:
         limits:
           cpus: '0.3'
-          memory: '0.6GB'
+          memory: '0.65GB'
 
   nginx:
     image: nginx:latest
@@ -54,7 +54,7 @@ services:
       resources:
         limits:
           cpus: '0.2'
-          memory: '0.2GB'
+          memory: '0.3GB'
   db:
     image: postgres:latest
     container_name: postgres_db
@@ -74,7 +74,7 @@ services:
       resources:
         limits:
           cpus: '0.50'
-          memory: '1.4GB'
+          memory: '1.6GB'
 
   cache:
     image: redis:latest
@@ -82,11 +82,12 @@ services:
       - api_network
     ports:
       - '6379:6379' 
+    command: redis-server --save "" --appendonly no --maxclients 20000
     deploy:
       resources:
         limits:
           cpus: '0.2'
-          memory: '0.8GB'
+          memory: '0.4GB'
 
 networks:
   api_network:

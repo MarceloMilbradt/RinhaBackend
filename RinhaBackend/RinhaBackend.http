@@ -1,0 +1,16 @@
+﻿@RinhaBackend_HostAddress = http://localhost:5224
+
+POST {{RinhaBackend_HostAddress}}/pessoas/
+Content-Type: application/json
+
+{
+    "apelido" : "josax",
+    "nome" : "José Roberto",
+    "nascimento" : "2000-10-01",
+    "stack" : ["C#", "Node", "Oracle"]
+}
+###
+
+GET {{RinhaBackend_HostAddress}}/pessoas?t=Node
+
+###
