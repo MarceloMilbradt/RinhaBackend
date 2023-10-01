@@ -13,7 +13,7 @@ public static class ConfigureServices
             s => ConnectionMultiplexer.Connect("localhost"));
 #else
         services.AddSingleton<IConnectionMultiplexer>(
-            s => ConnectionMultiplexer.Connect("cache"));
+            s => ConnectionMultiplexer.Connect("localhost"));
 #endif
         services.AddSingleton<PersonRepository>();
         services.AddSingleton<PersonService>();

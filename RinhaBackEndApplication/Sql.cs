@@ -17,8 +17,8 @@ internal static class Sql
     public const string SqlBulkInsert = "COPY public.\"Persons\" (\"Id\", \"Apelido\", \"Nome\", \"Nascimento\", \"Stack\") FROM STDIN (FORMAT BINARY)";
 
 #if DEBUG
-    public static readonly string ConnectionString = "Host=localhost;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend;Pooling=true;MaxPoolSize=200;CommandTimeout=30;MaxAutoPrepare=10";
+    public static readonly string ConnectionString = "Host=localhost;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend;Pooling=true;MaxPoolSize=1200;ConnectionIdleLifetime=45;Timeout=60;CommandTimeout=15;MaxAutoPrepare=10;";
 #else
-    public static readonly string ConnectionString = "Host=db;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend;Pooling=true;MaxPoolSize=600;ConnectionIdleLifetime=45;Timeout=60;CommandTimeout=15;MaxAutoPrepare=10;";
+    public static readonly string ConnectionString = "Host=localhost;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend;Pooling=true;MaxPoolSize=1200;ConnectionIdleLifetime=45;Timeout=60;CommandTimeout=15;MaxAutoPrepare=10;";
 #endif
 }

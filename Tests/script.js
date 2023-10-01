@@ -27,7 +27,7 @@ export default function () {
   let term = termosBusca[Math.floor(Math.random() * termosBusca.length)];
 
   // Criação E Talvez Consulta de Pessoas
-  let criaRes = http.post('http://localhost:9999/pessoas', payload, {
+  let criaRes = http.post('http://localhost:5224/pessoas', payload, {
     headers: {
       'User-Agent': 'Agente do Caos - 2023',
       'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export default function () {
   sleep(Math.random() * (0.03 - 0.001) + 0.001); // pause
 
   // Busca Válida de Pessoas
-  let buscaValidaRes = http.get(`http://localhost:9999/pessoas?t=${encodeURIComponent(term)}`);
+  let buscaValidaRes = http.get(`http://localhost:5224/pessoas?t=${encodeURIComponent(term)}`);
   if (buscaValidaRes.status >= 300) {
     console.log(term);
   }
@@ -56,7 +56,7 @@ export default function () {
   });
 
   // Busca Inválida de Pessoas
-  let buscaInvalidaRes = http.get('http://localhost:9999/pessoas');
+  let buscaInvalidaRes = http.get('http://localhost:5224/pessoas');
   check(buscaInvalidaRes, {
     'busca inválida status is 400': r => r.status === 400,
   });

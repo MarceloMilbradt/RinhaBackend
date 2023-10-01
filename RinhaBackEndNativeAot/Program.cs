@@ -23,7 +23,7 @@ pessoasApi.MapGet("/", async ([FromQuery] string? t, CancellationToken token) =>
     {
         return Results.BadRequest();
     }
-    return Results.Ok(await PersonRepository.SearchPersonsAsync(t, token));
+    return Results.Json(await PersonRepository.SearchPersonsAsync(t, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
 });
 
 pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] PersonRepository repository, CancellationToken token) =>
@@ -32,7 +32,7 @@ pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] Perso
     {
         return Results.BadRequest();
     }
-    return Results.Ok(await repository.GetByIdAsync(id, token));
+    return Results.Json(await repository.GetByIdAsync(id, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
 }).WithName("GetById");
 
 

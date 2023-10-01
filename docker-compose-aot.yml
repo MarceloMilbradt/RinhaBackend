@@ -17,7 +17,7 @@ services:
       resources:
         limits:
           cpus: '0.3'
-          memory: '0.65GB'
+          memory: '0.4GB'
 
   rinhabackend-api2:
     image: ${DOCKER_REGISTRY-}rinhabackendnativeaot:latest
@@ -36,7 +36,7 @@ services:
       resources:
         limits:
           cpus: '0.3'
-          memory: '0.65GB'
+          memory: '0.4GB'
 
   nginx:
     image: nginx:latest
@@ -87,7 +87,7 @@ services:
       resources:
         limits:
           cpus: '0.2'
-          memory: '0.4GB'
+          memory: '0.3GB'
 
 networks:
   api_network:

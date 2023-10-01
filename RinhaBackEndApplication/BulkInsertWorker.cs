@@ -1,12 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System.Buffers;
 using System.Runtime.InteropServices;
 
 namespace RinhaBackend.Application;
 
 public sealed class BulkInsertWorker(GlobalQueue queue, IConfiguration configuration) : BackgroundService
 {
-    private readonly TimeSpan _interval = TimeSpan.FromSeconds(3);
+    private readonly TimeSpan _interval = TimeSpan.FromSeconds(2);
     private readonly int SizeThreshold = Convert.ToInt32(configuration["BulkSize"] ?? "100");
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -21,14 +22,14 @@ public sealed class BulkInsertWorker(GlobalQueue queue, IConfiguration configura
 
                 if (personToInsert.Count >= SizeThreshold)
                 {
-                    FlushQueueAsync(personToInsert, stoppingToken);
+                    await FlushQueueAsync(personToInsert, stoppingToken);
                     personToInsert.Clear();
                 }
             }
 
             if (personToInsert.Count != 0)
             {
-                FlushQueueAsync(personToInsert, stoppingToken);
+                await FlushQueueAsync(personToInsert, stoppingToken);
                 personToInsert.Clear();  // Clear after flush, just for clarity
             }
 
@@ -36,9 +37,19 @@ public sealed class BulkInsertWorker(GlobalQueue queue, IConfiguration configura
         }
     }
 
-    private static void FlushQueueAsync(List<Person> items, CancellationToken stoppingToken)
+    private static async Task FlushQueueAsync(List<Person> items, CancellationToken stoppingToken)
     {
-        var itemsToInsert = items.ToArray();
-        Task.Run(() => PersonRepository.BulkInsertAsync(itemsToInsert, stoppingToken), stoppingToken);
+        var size = items.Count;
+        var itemsToCreate = ArrayPool<Person>.Shared.Rent(size);
+        try
+        {
+            items.CopyTo(itemsToCreate, 0);
+            await PersonRepository.BulkInsertAsync(itemsToCreate, stoppingToken);
+        }
+        finally
+        {
+            ArrayPool<Person>.Shared.Return(itemsToCreate);
+        }
     }
+
 }

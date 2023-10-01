@@ -16,8 +16,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
-          memory: '0.2GB'
+          cpus: '0.3'
+          memory: '0.4GB'
 
   rinhabackend-api2:
     image: ${DOCKER_REGISTRY-}rinhabackend:latest
@@ -35,8 +35,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
-          memory: '0.2GB'
+          cpus: '0.3'
+          memory: '0.4GB'
 
   nginx:
     image: nginx:latest
@@ -54,7 +54,7 @@ services:
       resources:
         limits:
           cpus: '0.2'
-          memory: '0.5GB'
+          memory: '0.3GB'
   db:
     image: postgres:latest
     container_name: postgres_db
@@ -73,8 +73,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.7'
-          memory: '1.8GB'
+          cpus: '0.5'
+          memory: '1.6GB'
 
   cache:
     image: redis:latest
@@ -86,7 +86,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: '0.2'
           memory: '0.3GB'
 
 

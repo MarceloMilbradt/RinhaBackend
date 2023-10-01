@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCompression;
 using RinhaBackend.Application;
+using System.IO.Compression;
 
 
 var builder = WebApplication.CreateSlimBuilder(args);
@@ -9,10 +11,19 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 });
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.Providers.Add<GzipCompressionProvider>();
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
 builder.Services.AddRequiredServices();
 
 var app = builder.Build();
-
+app.UseResponseCompression();
 
 
 var pessoasApi = app.MapGroup("/pessoas");
@@ -23,7 +34,7 @@ pessoasApi.MapGet("/", async ([FromQuery] string? t, CancellationToken token) =>
     {
         return Results.BadRequest();
     }
-    return Results.Ok(await PersonRepository.SearchPersonsAsync(t, token));
+    return Results.Json(await PersonRepository.SearchPersonsAsync(t, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
 });
 
 var getById = "GetById";
@@ -33,7 +44,7 @@ pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] Perso
     {
         return Results.BadRequest();
     }
-    return Results.Ok(await repository.GetByIdAsync(id, token));
+    return Results.Json(await repository.GetByIdAsync(id, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
 }).WithName(getById);
 
 
