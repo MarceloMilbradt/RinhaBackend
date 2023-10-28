@@ -13,7 +13,7 @@ public static class ConfigureServices
             s => ConnectionMultiplexer.Connect("localhost"));
 #else
         services.AddSingleton<IConnectionMultiplexer>(
-            s => ConnectionMultiplexer.Connect("localhost"));
+            s => ConnectionMultiplexer.Connect("cache"));
 #endif
         services.AddSingleton<PersonRepository>();
         services.AddSingleton<PersonService>();
@@ -29,8 +29,7 @@ public static class ConfigureServices
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Default)]
 [JsonSerializable(typeof(Person))]
-[JsonSerializable(typeof(List<Person>))]
-[JsonSerializable(typeof(IEnumerable<Person>))]
+[JsonSerializable(typeof(IAsyncEnumerable<Person>))]
 [JsonSerializable(typeof(int))]
 public partial class AppJsonSerializerContext : JsonSerializerContext
 {

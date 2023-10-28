@@ -19,6 +19,6 @@ internal static class Sql
 #if DEBUG
     public static readonly string ConnectionString = "Host=localhost;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend;Pooling=true;MaxPoolSize=1200;ConnectionIdleLifetime=45;Timeout=60;CommandTimeout=15;MaxAutoPrepare=10;";
 #else
-    public static readonly string ConnectionString = "Host=localhost;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend;Pooling=true;MaxPoolSize=1200;ConnectionIdleLifetime=45;Timeout=60;CommandTimeout=15;MaxAutoPrepare=10;";
+    public static readonly string ConnectionString = "Host=db;Database=rinhabackend;Username=rinhabackend;Password=rinhabackend;Pooling=true;MaxPoolSize=1200;ConnectionIdleLifetime=45;Timeout=60;CommandTimeout=15;MaxAutoPrepare=10;";
 #endif
 }

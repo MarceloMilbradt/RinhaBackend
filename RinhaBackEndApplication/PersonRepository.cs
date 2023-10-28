@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using NpgsqlTypes;
+using System.Runtime.CompilerServices;
 using System.Text;
 namespace RinhaBackend.Application;
 
@@ -35,7 +36,7 @@ public sealed class PersonRepository(RedisCacheService cacheService)
         await reader.ReadAsync(token);
         return ReadPerson(reader);
     }
-    public static async Task<List<Person>> SearchPersonsAsync(string term, CancellationToken token)
+    public static async IAsyncEnumerable<Person> SearchPersonsAsync(string term, [EnumeratorCancellation] CancellationToken token)
     {
         //using var datasource = NpgsqlDataSource.Create(Sql.ConnectionString);
         using var connection = await _dataSource.OpenConnectionAsync(token);
@@ -46,14 +47,12 @@ public sealed class PersonRepository(RedisCacheService cacheService)
             await cmd.PrepareAsync(token);
         }
         termParam.Value = term;
-        var persons = new List<Person>(50);
         using var reader = await cmd.ExecuteReaderAsync(token);
+
         while (await reader.ReadAsync(token))
         {
-            persons.Add(ReadPerson(reader));
+            yield return ReadPerson(reader);
         }
-
-        return persons;
     }
 
     private static Person ReadPerson(NpgsqlDataReader reader)
@@ -75,7 +74,7 @@ public sealed class PersonRepository(RedisCacheService cacheService)
         return Convert.ToInt32(await new NpgsqlCommand("SELECT COUNT(*) FROM public.\"Persons\"", connection).ExecuteScalarAsync());
     }
 
-    internal static async Task BulkInsertAsync(Person[] items, CancellationToken cancellationToken)
+    internal static async Task BulkInsertAsync(IEnumerable<Person> items, CancellationToken cancellationToken)
     {
         using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
         using var writer = await connection.BeginBinaryImportAsync(Sql.SqlBulkInsert, cancellationToken);
@@ -83,21 +82,19 @@ public sealed class PersonRepository(RedisCacheService cacheService)
         var apelidoBuffer = new StringBuilder(32);
         var nomeBuffer = new StringBuilder(100);
 
-        for (int i = 0; i < items.Length; i++)
+        foreach (var person in items)
         {
-            var item = items[i];
-
             await writer.StartRowAsync(cancellationToken);
-            await writer.WriteAsync(item.Id, NpgsqlDbType.Uuid, cancellationToken);
+            await writer.WriteAsync(person.Id, NpgsqlDbType.Uuid, cancellationToken);
 
-            apelidoBuffer.Clear().Append(TruncateString(item.Apelido, 32));
+            apelidoBuffer.Clear().Append(TruncateString(person.Apelido, 32));
             await writer.WriteAsync(apelidoBuffer.ToString(), NpgsqlDbType.Text, cancellationToken);
 
-            nomeBuffer.Clear().Append(TruncateString(item.Nome, 100));
+            nomeBuffer.Clear().Append(TruncateString(person.Nome, 100));
             await writer.WriteAsync(nomeBuffer.ToString(), NpgsqlDbType.Text, cancellationToken);
 
-            await writer.WriteAsync(item.Nascimento, NpgsqlDbType.Date, cancellationToken);
-            await writer.WriteAsync(string.Join(",", item.Stack), NpgsqlDbType.Text, cancellationToken);
+            await writer.WriteAsync(person.Nascimento, NpgsqlDbType.Date, cancellationToken);
+            await writer.WriteAsync(string.Join(",", person.Stack), NpgsqlDbType.Text, cancellationToken);
         }
 
         await writer.CompleteAsync(cancellationToken);
@@ -106,6 +103,6 @@ public sealed class PersonRepository(RedisCacheService cacheService)
 
     public static string TruncateString(string input, int maxLength)
     {
-        return input.Length <= maxLength ? input : input.Substring(0, maxLength);
+        return input.Length <= maxLength ? input : input[..maxLength];
     }
 }

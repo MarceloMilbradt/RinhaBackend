@@ -28,13 +28,13 @@ app.UseResponseCompression();
 
 var pessoasApi = app.MapGroup("/pessoas");
 
-pessoasApi.MapGet("/", async ([FromQuery] string? t, CancellationToken token) =>
+pessoasApi.MapGet("/", ([FromQuery] string? t, CancellationToken token) =>
 {
     if (t is null)
     {
         return Results.BadRequest();
     }
-    return Results.Json(await PersonRepository.SearchPersonsAsync(t, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
+    return Results.Json(PersonRepository.SearchPersonsAsync(t, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
 });
 
 var getById = "GetById";
@@ -53,6 +53,7 @@ app.MapGet("/contagem-pessoas", async () =>
     return Results.Ok(await PersonRepository.CountPersonsAsync());
 });
 
+var routeValues = new RouteValueDictionary();
 pessoasApi.MapPost("/", async ([FromBody] Person person, [FromServices] PersonService service, CancellationToken token) =>
 {
     var canCreate = await service.ValidateAsync(person);
@@ -60,7 +61,7 @@ pessoasApi.MapPost("/", async ([FromBody] Person person, [FromServices] PersonSe
     try
     {
         var id = await service.Create(person, token);
-        var routeValues = new RouteValueDictionary() { ["id"] = id };
+        routeValues["id"] = id;
         return Results.CreatedAtRoute(getById, routeValues);
     }
     catch

@@ -11,6 +11,6 @@ Content-Type: application/json
 }
 ###
 
-GET {{RinhaBackend_HostAddress}}/pessoas?t=Node
+GET {{RinhaBackend_HostAddress}}/pessoas?t=Nos
 
 ###
