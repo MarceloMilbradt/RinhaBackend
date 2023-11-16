@@ -3,14 +3,26 @@
 POST {{RinhaBackend_HostAddress}}/pessoas/
 Content-Type: application/json
 
-{
-    "apelido" : "josax",
-    "nome" : "José Roberto",
-    "nascimento" : "2000-10-01",
-    "stack" : ["C#", "Node", "Oracle"]
-}
+ {
+        "Id": "50690611-d92a-4c4f-94f7-c25f47e1da73",
+        "Apelido": "NTYusWLPkWas",
+        "Nome": "BrZdhtadJbAHawfeephNDHNZYABrcfOboxFqQz hsYkQTJXSPuNRdqZMIukVbwUlCUKIllylOFhrxwJphbVERIphsFlj",
+        "Nascimento": "2014-05-18T00:00:00",
+        "Stack": [
+            "Ruby",
+            "C\u002B\u002B",
+            "C#",
+            "TypeScript",
+            "Scala",
+            "PHP",
+            "C\u002B\u002B",
+            "Scala",
+            "Java",
+            "R"
+        ]
+    }
 ###
 
-GET {{RinhaBackend_HostAddress}}/pessoas?t=Nos
+GET {{RinhaBackend_HostAddress}}/pessoas?t=no
 
 ###

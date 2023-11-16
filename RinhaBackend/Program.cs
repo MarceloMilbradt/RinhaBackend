@@ -1,56 +1,55 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.ResponseCompression;
-using RinhaBackend.Application;
-using System.IO.Compression;
+using Microsoft.EntityFrameworkCore;
+using RinhaBackend.Services;
+using RinhaBackend.Persistence;
+using RinhaBackend.Models;
 
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-});
-
-builder.Services.AddResponseCompression(options =>
-{
-    options.Providers.Add<GzipCompressionProvider>();
-});
-builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Fastest;
-});
 
 builder.Services.AddRequiredServices();
 
-var app = builder.Build();
-app.UseResponseCompression();
+builder.Services.AddDbContextPool<PersonContext>(
+    o => o.UseNpgsql(builder.Configuration.GetConnectionString("RinhaBackend"))
+            .EnableThreadSafetyChecks(false)
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+    , 4096);
 
+var app = builder.Build();
 
 var pessoasApi = app.MapGroup("/pessoas");
 
-pessoasApi.MapGet("/", ([FromQuery] string? t, CancellationToken token) =>
+pessoasApi.MapGet("/", ([FromQuery] string? t, PersonContext context, CancellationToken token) =>
 {
-    if (t is null)
+    if (t == null)
     {
         return Results.BadRequest();
     }
-    return Results.Json(PersonRepository.SearchPersonsAsync(t, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
+    try
+    {
+        return Results.Json(PersonContext.SearchPersonsCompiledQueryAsync(context, t.ToLower()), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
+    }
+    catch
+    {
+        return Results.Json(new List<Person>(), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
+    }
 });
 
 var getById = "GetById";
-pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, [FromServices] PersonRepository repository, CancellationToken token) =>
+pessoasApi.MapGet("/{id:Guid}", async ([FromRoute] Guid id, PersonService service, CancellationToken token) =>
 {
     if (id == Guid.Empty)
     {
         return Results.BadRequest();
     }
-    return Results.Json(await repository.GetByIdAsync(id, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
+    return Results.Json(await service.GetByIdAsync(id, token), AppJsonSerializerContext.Default, statusCode: StatusCodes.Status200OK);
 }).WithName(getById);
 
 
-app.MapGet("/contagem-pessoas", async () =>
+app.MapGet("/contagem-pessoas", async (PersonContext context) =>
 {
-    return Results.Ok(await PersonRepository.CountPersonsAsync());
+    return Results.Ok(await PersonContext.CountPersonsCompiledQueryAsync(context));
 });
 
 var routeValues = new RouteValueDictionary();
@@ -60,7 +59,7 @@ pessoasApi.MapPost("/", async ([FromBody] Person person, [FromServices] PersonSe
     if (!canCreate) return Results.UnprocessableEntity();
     try
     {
-        var id = await service.Create(person, token);
+        var id = await service.CreateAsync(person, token);
         routeValues["id"] = id;
         return Results.CreatedAtRoute(getById, routeValues);
     }
@@ -69,7 +68,6 @@ pessoasApi.MapPost("/", async ([FromBody] Person person, [FromServices] PersonSe
         return Results.UnprocessableEntity();
     }
 });
-
 
 
 app.Run();

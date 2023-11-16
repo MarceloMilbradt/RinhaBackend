@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  rinhabackend-api:
+  rinhabackend-api: &rinhabackend-api-config
     image: ${DOCKER_REGISTRY-}rinhabackend:latest
     container_name: rinhabackend-api
     depends_on:
@@ -16,27 +16,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: '0.15'
           memory: '0.4GB'
 
   rinhabackend-api2:
-    image: ${DOCKER_REGISTRY-}rinhabackend:latest
+    <<: *rinhabackend-api-config
     container_name: rinhabackend-api2
     depends_on:
       - db
       - rinhabackend-api
-    networks:
-      - api_network
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:80
-    expose:
-      - "80"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.3'
-          memory: '0.4GB'
 
   nginx:
     image: nginx:latest
@@ -53,7 +41,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: '0.15'
           memory: '0.3GB'
   db:
     image: postgres:latest
@@ -73,7 +61,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: '0.9'
           memory: '1.6GB'
 
   cache:

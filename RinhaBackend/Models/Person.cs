@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace RinhaBackend.Application;
+namespace RinhaBackend.Models;
 
 [MemoryPackable(GenerateType.VersionTolerant)]
 public partial class Person
@@ -20,10 +20,11 @@ public partial class Person
     [MemoryPackOrder(3)]
     public DateTime Nascimento { get; set; }
     [MemoryPackOrder(4)]
-    [Column(TypeName = "text[]")] 
+    [MaxLength(1024)]
     public string[] Stack { get; set; }
     [MemoryPackIgnore]
     [JsonIgnore]
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public string SearchField { get; set; }
+
 }
