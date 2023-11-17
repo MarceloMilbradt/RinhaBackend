@@ -18,7 +18,7 @@ public class PersonContext : DbContext
 
     public static readonly Func<PersonContext, string, IAsyncEnumerable<Person>> SearchPersonsCompiledQueryAsync =
     EF.CompileAsyncQuery((PersonContext context, string term) =>
-        context.Persons.Where(c => c.SearchField.Contains(term)).AsNoTracking().Take(50));
+        context.Persons.Where(c => EF.Functions.Like(c.SearchField, $"%{term}%")).AsNoTracking().Take(50));
 
     public static readonly Func<PersonContext, Task<int>> CountPersonsCompiledQueryAsync =
     EF.CompileAsyncQuery((PersonContext context) => context.Persons.Count());
