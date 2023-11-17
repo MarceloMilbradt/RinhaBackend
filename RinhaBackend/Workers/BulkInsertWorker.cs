@@ -6,7 +6,7 @@ public sealed class BulkInsertWorker : BackgroundService
     private readonly IServiceProvider _provider;
     private readonly GlobalQueue _insertQueue;
     private readonly ILogger<BulkInsertWorker> _logger;
-    private readonly TimeSpan _interval = TimeSpan.FromSeconds(3);
+    private readonly TimeSpan _interval = TimeSpan.FromSeconds(5);
 
     public BulkInsertWorker(GlobalQueue insertQueue, IServiceProvider provider, ILogger<BulkInsertWorker> logger)
     {

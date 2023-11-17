@@ -1,4 +1,5 @@
-﻿using RinhaBackend.Models;
+﻿using LazyCache;
+using RinhaBackend.Models;
 using RinhaBackend.Persistence;
 
 namespace RinhaBackend.Services;
@@ -10,7 +11,7 @@ public sealed class PersonService
     private readonly PersonContext _context;
     private readonly GlobalQueue _insertQueue;
     private readonly ILogger<PersonService> _logger;
-
+    private readonly IAppCache _personLocalCache;
     public PersonService(RedisCacheService redisCacheService, PersonContext context, GlobalQueue insertQueue, ILogger<PersonService> logger)
     {
         _redisCacheService = redisCacheService;
@@ -46,26 +47,21 @@ public sealed class PersonService
     {
         person.Stack ??= [];
         _insertQueue.Enqueue(person);
+         _personLocalCache.Add(person.Id.ToString(), person, TimeSpan.FromSeconds(120));
         await _redisCacheService.SetAsync(person);
         return person.Id;
     }
 
-    public async Task<Person> GetByIdAsync(Guid id, CancellationToken token)
+    public async ValueTask<Person> GetByIdAsync(Guid id, CancellationToken token)
     {
-        var person = await _redisCacheService.GetItemAsync(id);
-        if (person == null)
+        var person = _personLocalCache.Get<Person>(id.ToString());
+        if(person != null)
         {
-            person = await _context.Persons.FindAsync([id], cancellationToken: token);
-            if (person != null)
-            {
-                await _redisCacheService.SetAsync(person);
-            }
+            return person;
         }
-        return person;
-    }
 
-    public static string TruncateString(string input, int maxLength)
-    {
-        return input.Length <= maxLength ? input : input[..maxLength];
+        person = await _redisCacheService.GetItemAsync(id);
+        person ??= await _context.Persons.FindAsync([id], cancellationToken: token);
+        return person;
     }
 }

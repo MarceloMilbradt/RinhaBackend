@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RinhaBackend", "RinhaBacken
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{FDCC1E00-A786-44D9-BF18-B059A01117A4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RinhaBackEndNativeAot", "RinhaBackEndNativeAot\RinhaBackEndNativeAot.csproj", "{52EB8B7F-88E3-4E06-AAD2-17C8F161CFDE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RinhaBackEndApplication", "RinhaBackEndApplication\RinhaBackEndApplication.csproj", "{B280CED0-8954-4048-9A00-30B410A2234A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{FDCC1E00-A786-44D9-BF18-B059A01117A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDCC1E00-A786-44D9-BF18-B059A01117A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDCC1E00-A786-44D9-BF18-B059A01117A4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{52EB8B7F-88E3-4E06-AAD2-17C8F161CFDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{52EB8B7F-88E3-4E06-AAD2-17C8F161CFDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{52EB8B7F-88E3-4E06-AAD2-17C8F161CFDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{52EB8B7F-88E3-4E06-AAD2-17C8F161CFDE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B280CED0-8954-4048-9A00-30B410A2234A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B280CED0-8954-4048-9A00-30B410A2234A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B280CED0-8954-4048-9A00-30B410A2234A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B280CED0-8954-4048-9A00-30B410A2234A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

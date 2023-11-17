@@ -29,6 +29,7 @@ public static class ConfigureServices
         services.AddSingleton<GlobalQueue>();
         services.AddHostedService<BulkInsertWorker>();
         services.AddHostedService<WarmupWorker>();
+        services.AddLazyCache();
         return services;
     }
 

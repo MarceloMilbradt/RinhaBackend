@@ -23,7 +23,7 @@ public sealed class WarmupWorker : BackgroundService
         var context = scope.ServiceProvider.GetRequiredService<PersonContext>();
 
         var personList = new List<Person>();
-        for (int x = 0; x < 1000; x++)
+        for (int x = 0; x < 10_000; x++)
         {
             var newPerson = new Person
             {
