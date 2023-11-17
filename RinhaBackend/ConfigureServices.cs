@@ -1,4 +1,7 @@
-﻿using RinhaBackend.Application;
+﻿using RinhaBackend.Models;
+using RinhaBackend.Persistence;
+using RinhaBackend.Services;
+using RinhaBackend.Workers;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
 
@@ -8,6 +11,12 @@ public static class ConfigureServices
 {
     public static IServiceCollection AddRequiredServices(this IServiceCollection services)
     {
+
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+        });
+
 #if DEBUG
         services.AddSingleton<IConnectionMultiplexer>(
             s => ConnectionMultiplexer.Connect("localhost"));
@@ -15,11 +24,12 @@ public static class ConfigureServices
         services.AddSingleton<IConnectionMultiplexer>(
             s => ConnectionMultiplexer.Connect("cache"));
 #endif
-        services.AddSingleton<PersonRepository>();
-        services.AddSingleton<PersonService>();
+        services.AddScoped<PersonService>();
         services.AddSingleton<RedisCacheService>();
         services.AddSingleton<GlobalQueue>();
         services.AddHostedService<BulkInsertWorker>();
+        services.AddHostedService<WarmupWorker>();
+        services.AddLazyCache();
         return services;
     }
 
@@ -29,8 +39,8 @@ public static class ConfigureServices
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Default)]
 [JsonSerializable(typeof(Person))]
+[JsonSerializable(typeof(IAsyncEnumerable<Person>))]
 [JsonSerializable(typeof(List<Person>))]
-[JsonSerializable(typeof(IEnumerable<Person>))]
 [JsonSerializable(typeof(int))]
 public partial class AppJsonSerializerContext : JsonSerializerContext
 {
